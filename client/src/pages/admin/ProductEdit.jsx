@@ -67,8 +67,11 @@ export default function ProductEdit() {
     setError('')
     setSaving(true)
     try {
-      if (isNew) await api.createProduct(form)
-      else await api.updateProduct(id, form)
+      // Si la foto elegida es del catálogo del repo, se sube a Cloudinary.
+      const image_url = await api.cloudinaryFromRepo(form.image_url)
+      const payload = { ...form, image_url }
+      if (isNew) await api.createProduct(payload)
+      else await api.updateProduct(id, payload)
       navigate('/admin/productos')
     } catch (err) {
       setError(err.message)
