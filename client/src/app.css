@@ -457,8 +457,223 @@
   object-fit: contain;
 }
 
+/* ===== Hero: confianza ===== */
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-top: 1.8rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ===== Secciones compactas (Home) ===== */
+.section-tight {
+  padding: 1.5rem 0;
+}
+.mini-title {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.chip-link {
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: border-color 0.12s, transform 0.1s, background 0.12s;
+}
+.chip-link:hover {
+  border-color: var(--blue);
+  transform: translateY(-2px);
+}
+.strip-count {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+/* ===== Badges de vehículo / ribbon / CTA de tarjeta ===== */
+.badge-veh {
+  background: rgba(255, 90, 0, 0.14);
+  color: var(--orange-2);
+  border: 1px solid rgba(255, 90, 0, 0.3);
+}
+.ribbon {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  background: var(--grad-fire);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  box-shadow: var(--shadow-glow);
+}
+.product-thumb {
+  position: relative;
+}
+.card-cta {
+  font-weight: 800;
+  color: var(--orange-2);
+  font-size: 0.9rem;
+}
+
+/* ===== Catálogo inteligente ===== */
+.catalog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.8rem;
+}
+.catalog-search {
+  display: flex;
+  gap: 0.6rem;
+  flex: 1;
+  max-width: 560px;
+  min-width: 260px;
+}
+.catalog-search input {
+  flex: 1;
+}
+.catalog-search select {
+  max-width: 220px;
+}
+.linklike {
+  background: none;
+  border: none;
+  color: var(--orange-2);
+  cursor: pointer;
+  font: inherit;
+  padding: 0 0 0 0.3rem;
+}
+.catalog-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 1.8rem;
+  align-items: start;
+}
+.catalog-filters {
+  position: sticky;
+  top: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+}
+.facet h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+  margin: 0 0 0.6rem;
+}
+.facet-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.facet-chip {
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 0.34rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.facet-chip:hover {
+  border-color: var(--orange);
+  color: var(--text);
+}
+.facet-chip.active {
+  background: var(--grad-fire);
+  color: #fff;
+  border-color: transparent;
+}
+.facet-count {
+  opacity: 0.7;
+  font-size: 0.72em;
+}
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-dim);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+/* ===== Detalle de producto ===== */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.2rem;
+  align-items: start;
+  margin-top: 1.4rem;
+}
+.detail-media {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.detail-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.detail-ph {
+  font-size: 5rem;
+  color: var(--text-faint);
+}
+.detail-price {
+  margin: 1.4rem 0;
+}
+
 /* ===== Tablets ===== */
 @media (max-width: 820px) {
+  .catalog-layout {
+    grid-template-columns: 1fr;
+  }
+  .catalog-filters {
+    position: static;
+    flex-direction: column;
+  }
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .detail-media {
+    aspect-ratio: 4 / 3;
+  }
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero-logo {
+    order: -1;
   .hero-grid {
     grid-template-columns: 1fr;
   }

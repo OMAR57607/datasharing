@@ -30,6 +30,16 @@ export const api = {
     return data
   },
 
+  // Cuenta una "solicitud" (vista) del producto para el ranking de más
+  // solicitados. Silencioso: si falla (RPC no migrada) no rompe la vista.
+  async incrementViews(id) {
+    try {
+      await supabase.rpc('increment_product_views', { p_id: id })
+    } catch {
+      /* ignora */
+    }
+  },
+
   async getCategories() {
     const { data, error } = await supabase
       .from('products')
