@@ -34,8 +34,17 @@ export default function AdminLayout() {
           <Link to="/" className="muted" style={{ fontSize: '0.85rem' }}>
             ↗ Ver tienda
           </Link>
-          <button className="btn btn-ghost btn-sm" onClick={onLogout}>
-            Salir ({user?.email})
+          {user?.email && (
+            <span className="admin-user" title={user.email}>
+              👤 {user.email}
+            </span>
+          )}
+          <button
+            className="btn btn-danger btn-sm admin-logout"
+            onClick={onLogout}
+            title="Cerrar sesión"
+          >
+            🚪 Cerrar sesión
           </button>
         </aside>
         <main className="admin-main">
