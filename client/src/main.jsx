@@ -19,6 +19,7 @@ import ProductEdit from './pages/admin/ProductEdit.jsx'
 import ImportPdf from './pages/admin/ImportPdf.jsx'
 import BulkPrices from './pages/admin/BulkPrices.jsx'
 import AssignPhotos from './pages/admin/AssignPhotos.jsx'
+import QuotesAdmin from './pages/admin/QuotesAdmin.jsx'
 import Quote from './pages/Quote.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -53,6 +54,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="importar" element={<ImportPdf />} />
             <Route path="fotos" element={<AssignPhotos />} />
             <Route path="precios" element={<BulkPrices />} />
+            <Route path="cotizaciones" element={<QuotesAdmin />} />
           </Route>
           </Routes>
         </QuoteProvider>
