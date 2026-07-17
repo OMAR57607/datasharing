@@ -3,11 +3,14 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../api.js'
 import { formatPrice } from '../components/ProductCard.jsx'
 import { parseVehicle } from '../lib/vehicles.js'
+import { useQuote } from '../context/QuoteContext.jsx'
+import { WHATSAPP } from '../lib/config.js'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const [product, setProduct] = useState(null)
   const [error, setError] = useState('')
+  const { add, has } = useQuote()
 
   useEffect(() => {
     api
@@ -84,25 +87,31 @@ export default function ProductDetail() {
               )}
             </div>
             <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => add(product)}
+                disabled={has(product.id)}
+              >
+                {has(product.id) ? '✓ En mi lista' : '＋ Agregar a mi lista'}
+              </button>
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(
+                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
                   `Hola, me interesa: ${product.name}${product.sku ? ' (' + product.sku + ')' : ''}`
                 )}`}
                 target="_blank"
                 rel="noreferrer"
-                className="btn btn-primary"
+                className="btn btn-ice"
               >
                 💬 Consultar por WhatsApp
               </a>
-              <a
-                href={`mailto:contacto@nitrogarage.com?subject=Consulta:%20${encodeURIComponent(
-                  product.name
-                )}`}
-                className="btn btn-ghost"
-              >
-                Enviar email
-              </a>
             </div>
+            {has(product.id) && (
+              <p className="muted" style={{ marginTop: 10, fontSize: '0.9rem' }}>
+                <Link to="/cotizacion" className="card-cta">
+                  Ir a mi lista para generar la cotización →
+                </Link>
+              </p>
+            )}
           </div>
         </div>
       </div>

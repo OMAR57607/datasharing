@@ -5,6 +5,7 @@ import './theme.css'
 import './app.css'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
+import { QuoteProvider } from './context/QuoteContext.jsx'
 import PublicLayout from './components/PublicLayout.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Home from './pages/Home.jsx'
@@ -18,18 +19,21 @@ import ProductEdit from './pages/admin/ProductEdit.jsx'
 import ImportPdf from './pages/admin/ImportPdf.jsx'
 import BulkPrices from './pages/admin/BulkPrices.jsx'
 import AssignPhotos from './pages/admin/AssignPhotos.jsx'
+import Quote from './pages/Quote.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
+        <QuoteProvider>
         <Routes>
           {/* Tienda pública */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/catalogo" element={<Catalog />} />
             <Route path="/producto/:id" element={<ProductDetail />} />
+            <Route path="/cotizacion" element={<Quote />} />
           </Route>
 
           {/* Acceso admin */}
@@ -51,6 +55,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="precios" element={<BulkPrices />} />
           </Route>
           </Routes>
+        </QuoteProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

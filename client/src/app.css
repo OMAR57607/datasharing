@@ -243,12 +243,11 @@
 }
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.4rem;
 }
 .product-card {
-  display: flex;
-  flex-direction: column;
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -260,6 +259,11 @@
   border-color: var(--orange);
   box-shadow: var(--shadow);
 }
+.product-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 .product-thumb {
   aspect-ratio: 4 / 3;
   background: linear-gradient(135deg, var(--bg-3), var(--bg-2));
@@ -268,11 +272,12 @@
   justify-content: center;
   font-size: 2.6rem;
   color: var(--text-faint);
+  padding: 0.5rem;
 }
 .product-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .product-body {
   padding: 1rem;
@@ -282,8 +287,163 @@
   flex: 1;
 }
 .product-body h3 {
-  font-size: 1rem;
+  font-size: 1.02rem;
   margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: 2.6em;
+}
+
+/* Botón "agregar a lista" flotante sobre la tarjeta */
+.add-fab {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--nav-bg);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: transform 0.1s, background 0.15s, color 0.15s, border-color 0.15s;
+}
+.add-fab:hover {
+  border-color: var(--orange);
+  color: var(--orange-2);
+  transform: scale(1.08);
+}
+.add-fab.added {
+  background: var(--grad-ice);
+  color: #04121c;
+  border-color: transparent;
+}
+
+/* ===== Enlace "Mi lista" con badge ===== */
+.cart-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.cart-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--grad-fire);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Página de cotización ===== */
+.quote-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.6rem;
+  align-items: start;
+}
+.quote-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.quote-item {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem;
+}
+.quote-thumb {
+  width: 84px;
+  height: 84px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--bg-3), var(--bg-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  overflow: hidden;
+}
+.quote-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.quote-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.quote-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.quote-name:hover {
+  color: var(--orange-2);
+}
+.quote-price {
+  color: var(--gold);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+.quote-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+.qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.qty button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: var(--bg-2);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.qty button:hover {
+  background: var(--bg-3);
+}
+.qty span {
+  min-width: 34px;
+  text-align: center;
+  font-weight: 700;
+}
+.quote-form {
+  padding: 1.4rem;
+  position: sticky;
+  top: 84px;
+}
+.quote-form h3 {
+  margin-top: 0;
 }
 .product-sku {
   font-size: 0.72rem;
@@ -821,7 +981,7 @@
     white-space: nowrap;
   }
   .nav-links {
-    gap: 0.9rem;
+    gap: 0.7rem;
   }
   .nav-links a {
     font-size: 0.9rem;
@@ -829,6 +989,12 @@
   /* "Inicio" es redundante con el logo, que ya lleva a la home */
   .nav-links > a:first-child {
     display: none;
+  }
+  .cart-label {
+    display: none;
+  }
+  .theme-opt {
+    width: 26px;
   }
   .hero {
     padding: 2.5rem 0 2rem;
@@ -843,9 +1009,36 @@
     flex-direction: column;
     align-items: flex-start;
   }
+  /* Tarjetas horizontales: imagen a la izquierda, datos a la derecha */
   .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.85rem;
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+  .product-inner {
+    flex-direction: row;
+  }
+  .product-thumb {
+    aspect-ratio: 1;
+    width: 42%;
+    max-width: 150px;
+    flex-shrink: 0;
+  }
+  .product-body {
+    padding: 0.8rem;
+  }
+  .product-body h3 {
+    min-height: 0;
+  }
+  .add-fab {
+    width: 34px;
+    height: 34px;
+    font-size: 1.05rem;
+  }
+  .quote-layout {
+    grid-template-columns: 1fr;
+  }
+  .quote-form {
+    position: static;
   }
   .filters {
     flex-direction: column;
