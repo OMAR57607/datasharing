@@ -10,6 +10,9 @@ export default function AssignPhotos() {
   const [onlyMissing, setOnlyMissing] = useState(true)
   const [pickerFor, setPickerFor] = useState(null) // producto con el selector abierto
   const [savingId, setSavingId] = useState(null)
+  // Productos a los que se les asignó foto en esta sesión: se mantienen
+  // visibles (con etiqueta) aunque el filtro "solo sin foto" esté activo.
+  const [justDone, setJustDone] = useState(() => new Set())
 
   useEffect(() => {
     api
@@ -21,7 +24,9 @@ export default function AssignPhotos() {
 
   const shown = useMemo(() => {
     let list = products
-    if (onlyMissing) list = list.filter((p) => !p.image_url)
+    // Con el filtro activo mostramos los que no tienen foto Y también los que
+    // acabás de editar en esta sesión, para que no desaparezcan de tu vista.
+    if (onlyMissing) list = list.filter((p) => !p.image_url || justDone.has(p.id))
     if (search) {
       const s = search.toLowerCase()
       list = list.filter(
@@ -31,7 +36,11 @@ export default function AssignPhotos() {
       )
     }
     return list
-  }, [products, onlyMissing, search])
+  }, [products, onlyMissing, search, justDone])
+
+  function markDone(id) {
+    setJustDone((prev) => new Set(prev).add(id))
+  }
 
   const missingCount = products.filter((p) => !p.image_url).length
 
@@ -42,6 +51,7 @@ export default function AssignPhotos() {
       const image_url = await api.cloudinaryFromRepo(repoUrl)
       const updated = await api.updateProduct(product.id, { image_url, images: [image_url] })
       setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)))
+      markDone(product.id)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -56,6 +66,7 @@ export default function AssignPhotos() {
       const { url } = await api.uploadImage(file)
       const updated = await api.updateProduct(product.id, { image_url: url, images: [url] })
       setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)))
+      markDone(product.id)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -110,7 +121,10 @@ export default function AssignPhotos() {
                 ) : (
                   <span>🔧</span>
                 )}
-                {savingId === p.id && <div className="assign-saving">Guardando…</div>}
+                {justDone.has(p.id) && savingId !== p.id && (
+                  <span className="assign-done-tag">✓ Editado</span>
+                )}
+                {savingId === p.id && <div className="assign-saving">En edición…</div>}
               </div>
               <div className="assign-body">
                 <strong title={p.name}>{p.name}</strong>
