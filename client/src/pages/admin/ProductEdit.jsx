@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../../api.js'
+import ImagePicker from '../../components/ImagePicker.jsx'
 
 const EMPTY = {
   sku: '',
@@ -21,6 +22,7 @@ export default function ProductEdit() {
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   async function onImageFile(e) {
     const f = e.target.files?.[0]
@@ -138,9 +140,16 @@ export default function ProductEdit() {
             <input
               value={form.image_url}
               onChange={(e) => set('image_url', e.target.value)}
-              placeholder="URL de Cloudinary o subí un archivo ↓"
+              placeholder="Elegí del catálogo, subí un archivo, o pegá una URL"
             />
-            <div className="row" style={{ gap: 10, marginTop: 6, alignItems: 'center' }}>
+            <div className="row" style={{ gap: 10, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn-ice btn-sm"
+                onClick={() => setPickerOpen(true)}
+              >
+                🖼️ Elegir del catálogo
+              </button>
               <input type="file" accept="image/*" onChange={onImageFile} disabled={uploading} />
               {uploading && <span className="muted">Subiendo…</span>}
               {form.image_url && (
@@ -153,6 +162,12 @@ export default function ProductEdit() {
             </div>
           </div>
         </div>
+
+        <ImagePicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onSelect={(url) => set('image_url', url)}
+        />
 
         <div className="field">
           <label className="row" style={{ gap: 8, textTransform: 'none' }}>
