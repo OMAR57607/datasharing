@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { api } from '../../api.js'
 
+// Catálogo incluido en el repo (client/public/catalogos/), para no tener
+// que subirlo manualmente cada vez desde el equipo del admin.
+const REPO_CATALOGS = [
+  { label: 'Off-Road / Portaequipajes 2025', url: '/catalogos/off-road-portaequipajes-2025.pdf' },
+]
+
 export default function ImportPdf() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null) // { count, pages, products, pageImages }
@@ -8,23 +14,47 @@ export default function ImportPdf() {
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [loadingRepo, setLoadingRepo] = useState(false)
 
   const pageImages = preview?.pageImages || []
 
-  async function onUpload(e) {
-    e.preventDefault()
-    if (!file) return
+  async function processFile(pdfFile) {
     setError('')
     setResult(null)
     setLoading(true)
     try {
-      const data = await api.importPdf(file)
+      const data = await api.importPdf(pdfFile)
       setPreview(data)
       setRows(data.products.map((p) => ({ ...p, include: true, image_url: null })))
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  function onUpload(e) {
+    e.preventDefault()
+    if (!file) return
+    processFile(file)
+  }
+
+  async function loadFromRepo(catalog) {
+    setError('')
+    setLoadingRepo(true)
+    try {
+      const res = await fetch(catalog.url)
+      if (!res.ok) throw new Error('No se pudo leer el catálogo del repositorio')
+      const blob = await res.blob()
+      const repoFile = new File([blob], catalog.url.split('/').pop(), {
+        type: 'application/pdf',
+      })
+      setFile(repoFile)
+      await processFile(repoFile)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoadingRepo(false)
     }
   }
 
@@ -71,23 +101,47 @@ export default function ImportPdf() {
       )}
 
       {!preview && (
-        <form className="card" style={{ padding: '1.5rem', maxWidth: 560 }} onSubmit={onUpload}>
-          <p className="muted" style={{ marginTop: 0 }}>
-            Subí un catálogo en PDF. Se extraen los productos (sin precio) y cada
-            página se guarda como imagen en Cloudinary para que puedas asignarla.
-          </p>
-          <div className="field">
-            <label>Archivo PDF</label>
-            <input
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => setFile(e.target.files[0] || null)}
-            />
-          </div>
-          <button type="submit" className="btn btn-primary" disabled={!file || loading}>
-            {loading ? 'Procesando…' : 'Analizar PDF'}
-          </button>
-        </form>
+        <>
+          {REPO_CATALOGS.length > 0 && (
+            <div className="card" style={{ padding: '1.5rem', maxWidth: 560, marginBottom: '1.25rem' }}>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Catálogos ya disponibles en el repositorio (sin necesidad de subir el archivo):
+              </p>
+              <div className="row" style={{ flexWrap: 'wrap' }}>
+                {REPO_CATALOGS.map((c) => (
+                  <button
+                    key={c.url}
+                    type="button"
+                    className="btn btn-ice btn-sm"
+                    disabled={loadingRepo || loading}
+                    onClick={() => loadFromRepo(c)}
+                  >
+                    {loadingRepo ? 'Cargando…' : `📄 ${c.label}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <form className="card" style={{ padding: '1.5rem', maxWidth: 560 }} onSubmit={onUpload}>
+            <p className="muted" style={{ marginTop: 0 }}>
+              O subí otro catálogo en PDF desde tu equipo. Se extraen los productos
+              (sin precio) y cada página se guarda como imagen en Cloudinary para
+              que puedas asignarla.
+            </p>
+            <div className="field">
+              <label>Archivo PDF</label>
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => setFile(e.target.files[0] || null)}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={!file || loading}>
+              {loading ? 'Procesando…' : 'Analizar PDF'}
+            </button>
+          </form>
+        </>
       )}
 
       {preview && (
