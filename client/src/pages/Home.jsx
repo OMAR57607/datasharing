@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
 import { parseVehicle } from '../lib/vehicles.js'
+import HeroFX from '../components/HeroFX.jsx'
+import { revealStagger, observeReveal } from '../lib/anim.js'
 
 const CAT_ICON = {
   'Roll Bars': '🏎️',
@@ -21,6 +23,8 @@ const iconFor = (c) => CAT_ICON[c] || '🔧'
 export default function Home() {
   const [all, setAll] = useState([])
   const [loading, setLoading] = useState(true)
+  const heroRef = useRef(null)
+  const gridRef = useRef(null)
 
   useEffect(() => {
     api
@@ -29,6 +33,18 @@ export default function Home() {
       .catch(() => setAll([]))
       .finally(() => setLoading(false))
   }, [])
+
+  // Entrada animada del texto del hero (una sola vez, al montar).
+  useEffect(() => {
+    if (heroRef.current) {
+      revealStagger([...heroRef.current.children], { duration: 720 })
+    }
+  }, [])
+
+  // Revelado al hacer scroll de las tarjetas de producto.
+  useEffect(() => {
+    if (!loading) return observeReveal(gridRef.current, '.product-card')
+  }, [loading])
 
   const mostRequested = useMemo(() => {
     return [...all]
@@ -59,8 +75,9 @@ export default function Home() {
   return (
     <>
       <section className="hero">
+        <HeroFX />
         <div className="container hero-grid">
-          <div>
+          <div ref={heroRef}>
             <span className="badge badge-cat">Venta de accesorios · Off-Road</span>
             <h1>
               Dale <span className="text-grad">potencia y estilo</span> a tu
@@ -148,7 +165,7 @@ export default function Home() {
               agregarlos.
             </p>
           ) : (
-            <div className="product-grid">
+            <div className="product-grid" ref={gridRef}>
               {mostRequested.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

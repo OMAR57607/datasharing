@@ -1,5 +1,6 @@
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import ConfigBanner from './ConfigBanner.jsx'
+import ThemeToggle from './ThemeToggle.jsx'
 
 export default function PublicLayout() {
   return (
@@ -16,6 +17,7 @@ export default function PublicLayout() {
               Inicio
             </NavLink>
             <NavLink to="/catalogo">Catálogo</NavLink>
+            <ThemeToggle />
             <Link to="/admin" className="btn btn-ghost btn-sm">
               Admin
             </Link>
