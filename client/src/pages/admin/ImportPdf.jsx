@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api } from '../../api.js'
+import ImagePicker from '../../components/ImagePicker.jsx'
 
 // Catálogo incluido en el repo (client/public/catalogos/), para no tener
 // que subirlo manualmente cada vez desde el equipo del admin.
@@ -15,8 +16,7 @@ export default function ImportPdf() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [loadingRepo, setLoadingRepo] = useState(false)
-
-  const pageImages = preview?.pageImages || []
+  const [pickerRow, setPickerRow] = useState(null) // índice de fila con el selector abierto
 
   async function processFile(pdfFile) {
     setError('')
@@ -147,10 +147,9 @@ export default function ImportPdf() {
           <div className="admin-head">
             <p className="muted">
               {preview.filename} — {preview.pages} pág.,{' '}
-              <strong>{rows.length}</strong> producto(s) detectado(s).
-              {pageImages.length > 0
-                ? ` ${pageImages.length} imagen(es) de página disponibles.`
-                : ' (Sin imágenes: configurá Cloudinary para habilitarlas.)'}
+              <strong>{rows.length}</strong> producto(s) detectado(s). Usá el
+              botón <em>Elegir</em> de cada fila para asignarle una foto del
+              catálogo.
             </p>
             <div className="row">
               <button
@@ -176,7 +175,7 @@ export default function ImportPdf() {
                   <th style={{ width: 140 }}>SKU</th>
                   <th>Nombre</th>
                   <th style={{ width: 150 }}>Categoría</th>
-                  {pageImages.length > 0 && <th style={{ width: 130 }}>Imagen</th>}
+                  <th style={{ width: 150 }}>Imagen</th>
                 </tr>
               </thead>
               <tbody>
@@ -211,31 +210,24 @@ export default function ImportPdf() {
                         onChange={(e) => updateRow(i, 'category', e.target.value)}
                       />
                     </td>
-                    {pageImages.length > 0 && (
-                      <td>
-                        <div className="row" style={{ gap: 6, alignItems: 'center' }}>
-                          <select
-                            style={{ padding: '0.35rem 0.4rem' }}
-                            value={r.image_url || ''}
-                            onChange={(e) => updateRow(i, 'image_url', e.target.value || null)}
-                          >
-                            <option value="">—</option>
-                            {pageImages.map((pi) => (
-                              <option key={pi.page} value={pi.url}>
-                                Pág. {pi.page}
-                              </option>
-                            ))}
-                          </select>
-                          {r.image_url && (
-                            <img
-                              src={r.image_url}
-                              alt=""
-                              style={{ height: 34, width: 34, objectFit: 'cover', borderRadius: 4 }}
-                            />
-                          )}
-                        </div>
-                      </td>
-                    )}
+                    <td>
+                      <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => setPickerRow(i)}
+                        >
+                          {r.image_url ? 'Cambiar' : '🖼️ Elegir'}
+                        </button>
+                        {r.image_url && (
+                          <img
+                            src={r.image_url}
+                            alt=""
+                            style={{ height: 34, width: 34, objectFit: 'cover', borderRadius: 4 }}
+                          />
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -243,6 +235,14 @@ export default function ImportPdf() {
           </div>
         </div>
       )}
+
+      <ImagePicker
+        open={pickerRow !== null}
+        onClose={() => setPickerRow(null)}
+        onSelect={(url) => {
+          if (pickerRow !== null) updateRow(pickerRow, 'image_url', url)
+        }}
+      />
     </>
   )
 }

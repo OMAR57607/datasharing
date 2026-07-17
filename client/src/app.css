@@ -342,6 +342,64 @@
   color: var(--text-dim);
 }
 
+/* ===== Selector de imágenes (modal galería) ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 860px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.6rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.picker-item {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg-3);
+  aspect-ratio: 1;
+  transition: border-color 0.12s, transform 0.1s;
+}
+.picker-item:hover {
+  border-color: var(--orange);
+  transform: translateY(-2px);
+}
+.picker-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* ===== Tablets ===== */
 @media (max-width: 820px) {
   .hero-grid {
