@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../../api.js'
 import ImagePicker from '../../components/ImagePicker.jsx'
-import { parseVehicle } from '../../lib/vehicles.js'
+import { parseVehicle, normalizeMake } from '../../lib/vehicles.js'
 
 const MAX_IMAGES = 4
 
@@ -125,7 +125,7 @@ export default function ProductEdit() {
         ...form,
         images,
         image_url: images[0] || null, // portada = primera foto (compatibilidad)
-        vehicle_make: form.vehicle_make.trim() || null,
+        vehicle_make: normalizeMake(form.vehicle_make),
         year_from: form.year_from === '' ? null : Number(form.year_from),
         year_to: form.year_to === '' ? null : Number(form.year_to),
       }

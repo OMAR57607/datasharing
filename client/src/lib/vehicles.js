@@ -38,8 +38,11 @@ export function parseVehicle(name = '') {
 export function normalizeMake(text = '') {
   const upper = String(text).toUpperCase()
   for (const m of MAKES) if (upper.includes(m)) return displayMake(m)
-  const t = String(text).trim()
-  return t || null
+  // Marca no listada: la canonizamos a Title Case para que igual se unifiquen
+  // las variantes de mayúsculas/minúsculas ("kia", "KIA", "Kia" -> "Kia").
+  const t = String(text).trim().toLowerCase()
+  if (!t) return null
+  return t.replace(/\b[\p{L}]/gu, (c) => c.toUpperCase())
 }
 
 // Marca de vehículo efectiva: la manual (vehicle_make) tiene prioridad;
