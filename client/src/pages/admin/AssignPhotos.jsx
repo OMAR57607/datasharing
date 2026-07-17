@@ -116,6 +116,7 @@ export default function AssignPhotos() {
 
       <ImagePicker
         open={pickerFor !== null}
+        label={pickerFor?.name}
         onClose={() => setPickerFor(null)}
         onSelect={(url) => {
           if (pickerFor) assign(pickerFor, url)

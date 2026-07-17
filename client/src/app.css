@@ -928,6 +928,10 @@
   flex-direction: column;
   overflow: hidden;
 }
+.modal-gallery {
+  max-width: 1120px;
+  max-height: 92vh;
+}
 .modal-head {
   display: flex;
   align-items: center;
@@ -939,13 +943,15 @@
 }
 .picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0.6rem;
-  padding: 1rem;
+  /* Miniaturas grandes: pocas por fila pero que se vea bien el producto. */
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.85rem;
+  padding: 1.1rem 1.25rem 1.4rem;
   overflow-y: auto;
 }
 .picker-item {
-  padding: 6px;
+  position: relative;
+  padding: 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -954,7 +960,9 @@
      celda para que la foto (contenida, sin recortar) quede como un azulejo
      limpio en vez de una franja blanca sobre negro. */
   background: #fff;
-  aspect-ratio: 1;
+  /* Formato horizontal: la mayoría de las fotos son anchas, así el producto
+     llena la celda en vez de verse como una franja chiquita. */
+  aspect-ratio: 4 / 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -962,8 +970,8 @@
 }
 .picker-item:hover {
   border-color: var(--orange);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
 }
 .picker-item img {
   max-width: 100%;
@@ -972,6 +980,43 @@
   height: auto;
   object-fit: contain;
   display: block;
+}
+.picker-tag {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: rgba(10, 12, 16, 0.72);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.picker-item:hover .picker-tag {
+  opacity: 1;
+}
+/* Encabezado del modal galería */
+.modal-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.modal-subtitle {
+  color: var(--orange-2);
+  font-weight: 700;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 46vw;
+}
+.modal-count {
+  font-size: 0.75rem;
 }
 
 /* ===== Hero: confianza ===== */

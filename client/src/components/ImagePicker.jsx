@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 
 // Galería modal para elegir una foto del catálogo (servidas desde /productos).
-export default function ImagePicker({ open, onClose, onSelect }) {
+// `label` (opcional): nombre del producto al que se le está asignando la foto,
+// para no perder el hilo mientras se elige.
+export default function ImagePicker({ open, onClose, onSelect, label }) {
   const [photos, setPhotos] = useState([])
   const [page, setPage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,9 +28,15 @@ export default function ImagePicker({ open, onClose, onSelect }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal-gallery" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <strong>Elegí una foto del catálogo ({photos.length})</strong>
+          <div className="modal-title">
+            <strong>Elegí una foto</strong>
+            {label && <span className="modal-subtitle">para: {label}</span>}
+            <span className="muted modal-count">
+              {shown.length} de {photos.length} fotos
+            </span>
+          </div>
           <div className="row" style={{ gap: 8 }}>
             <select value={page} onChange={(e) => setPage(e.target.value)}>
               <option value="">Todas las páginas</option>
@@ -57,9 +65,10 @@ export default function ImagePicker({ open, onClose, onSelect }) {
                   onSelect(p.url)
                   onClose()
                 }}
-                title={p.url.split('/').pop()}
+                title={`Página ${p.page}`}
               >
                 <img src={p.url} alt="" loading="lazy" />
+                <span className="picker-tag">Pág. {p.page}</span>
               </button>
             ))}
           </div>

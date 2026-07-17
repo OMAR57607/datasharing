@@ -238,6 +238,7 @@ export default function ImportPdf() {
 
       <ImagePicker
         open={pickerRow !== null}
+        label={pickerRow !== null ? rows[pickerRow]?.name : null}
         onClose={() => setPickerRow(null)}
         onSelect={(url) => {
           if (pickerRow !== null) updateRow(pickerRow, 'image_url', url)
