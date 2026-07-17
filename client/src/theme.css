@@ -1,0 +1,240 @@
+/* ===== Nitro Garage — Sistema de diseño ===== */
+:root {
+  /* Paleta de marca (extraída del logo) */
+  --bg: #0d0d0f;
+  --bg-2: #16161a;
+  --bg-3: #1e1e24;
+  --surface: #1a1a1f;
+  --border: #2c2c34;
+
+  --orange: #ff5a00;
+  --orange-2: #ff7a1a;
+  --red: #e2231a;
+  --blue: #00a3ff;
+  --blue-2: #12c2ff;
+  --gold: #ffb400;
+
+  --text: #f2f2f5;
+  --text-dim: #a8a8b3;
+  --text-faint: #6d6d78;
+
+  --grad-fire: linear-gradient(100deg, #ff5a00, #e2231a);
+  --grad-ice: linear-gradient(100deg, #00a3ff, #12c2ff);
+  --grad-brand: linear-gradient(100deg, #ff5a00 0%, #ffb400 45%, #00a3ff 100%);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 24px rgba(255, 90, 0, 0.25);
+
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background-color: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100vh;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(255, 90, 0, 0.12), transparent 60%),
+    radial-gradient(1200px 600px at 100% 0%, rgba(0, 163, 255, 0.12), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.1;
+  margin: 0 0 0.5rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* Títulos con acento estilo racing */
+.display {
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.text-grad {
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.3rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.15s ease, background 0.15s;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-primary {
+  background: var(--grad-fire);
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+.btn-ice {
+  background: var(--grad-ice);
+  color: #04121c;
+}
+.btn-ice:hover {
+  filter: brightness(1.08);
+}
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+.btn-ghost:hover {
+  border-color: var(--orange);
+  color: var(--orange-2);
+}
+.btn-sm {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+}
+.btn-danger {
+  background: transparent;
+  border-color: rgba(226, 35, 26, 0.5);
+  color: #ff6b63;
+}
+.btn-danger:hover {
+  background: rgba(226, 35, 26, 0.12);
+}
+
+/* Tarjetas */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* Formularios */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+.field label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+input,
+textarea,
+select {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 0.65rem 0.8rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  width: 100%;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 90, 0, 0.15);
+}
+
+/* Badges / chips */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-cat {
+  background: rgba(0, 163, 255, 0.15);
+  color: var(--blue-2);
+  border: 1px solid rgba(0, 163, 255, 0.3);
+}
+.badge-off {
+  background: rgba(109, 109, 120, 0.2);
+  color: var(--text-faint);
+}
+
+/* Utilidades */
+.muted {
+  color: var(--text-dim);
+}
+.error-box {
+  background: rgba(226, 35, 26, 0.12);
+  border: 1px solid rgba(226, 35, 26, 0.35);
+  color: #ff8078;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+.success-box {
+  background: rgba(0, 163, 255, 0.1);
+  border: 1px solid rgba(0, 163, 255, 0.3);
+  color: var(--blue-2);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  text-align: left;
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+th {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+}
