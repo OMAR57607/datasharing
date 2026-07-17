@@ -13,6 +13,12 @@ create table if not exists public.products (
   brand         text,
   image_url     text,               -- URL de Cloudinary
   current_price numeric(12,2),
+  compatible_vehicles text,         -- ej. "Toyota Hilux, Ford Ranger"
+  year_from     smallint,
+  year_to       smallint,
+  dimensions    text,               -- medidas, ej. "120 x 90 x 15 cm"
+  material      text,
+  specs         text,               -- notas técnicas adicionales
   active        boolean not null default true,
   views         integer not null default 0,      -- "solicitudes" para ordenar
   featured      boolean not null default false,  -- destacado manual (pin)

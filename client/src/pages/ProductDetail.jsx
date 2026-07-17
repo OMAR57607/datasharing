@@ -38,6 +38,21 @@ export default function ProductDetail() {
   if (!product) return <div className="loading">Cargando…</div>
 
   const v = parseVehicle(product.name)
+  // Prioriza los campos explícitos cargados en el admin; si no están
+  // cargados, cae de vuelta al año detectado por heurística en el nombre.
+  const yearFrom = product.year_from ?? v.yearFrom
+  const yearTo = product.year_to ?? v.yearTo
+
+  const specRows = [
+    ['Vehículos compatibles', product.compatible_vehicles],
+    [
+      'Años',
+      yearFrom ? `${yearFrom}${yearTo && yearTo !== yearFrom ? `–${yearTo}` : ''}` : null,
+    ],
+    ['Medidas', product.dimensions],
+    ['Material', product.material],
+    ['Especificaciones', product.specs],
+  ].filter(([, value]) => value)
 
   return (
     <section className="section">
@@ -60,10 +75,10 @@ export default function ProductDetail() {
                 <span className="badge badge-cat">{product.category}</span>
               )}
               {v.make && <span className="badge badge-veh">{v.make}</span>}
-              {v.yearFrom && (
+              {yearFrom && (
                 <span className="badge badge-veh">
-                  {v.yearFrom}
-                  {v.yearTo && v.yearTo !== v.yearFrom ? `–${v.yearTo}` : ''}
+                  {yearFrom}
+                  {yearTo && yearTo !== yearFrom ? `–${yearTo}` : ''}
                 </span>
               )}
             </div>
@@ -75,6 +90,20 @@ export default function ProductDetail() {
             <p style={{ margin: '1.2rem 0' }}>
               {product.description || 'Sin descripción disponible.'}
             </p>
+
+            {specRows.length > 0 && (
+              <table className="spec-table">
+                <tbody>
+                  {specRows.map(([label, value]) => (
+                    <tr key={label}>
+                      <th>{label}</th>
+                      <td>{value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
             <div className="detail-price">
               {product.current_price != null ? (
                 <span className="price" style={{ fontSize: '2.2rem' }}>

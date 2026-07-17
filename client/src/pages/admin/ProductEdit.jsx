@@ -10,6 +10,12 @@ const EMPTY = {
   category: '',
   brand: '',
   image_url: '',
+  compatible_vehicles: '',
+  year_from: '',
+  year_to: '',
+  dimensions: '',
+  material: '',
+  specs: '',
   active: true,
   featured: false,
 }
@@ -52,6 +58,12 @@ export default function ProductEdit() {
           category: p.category || '',
           brand: p.brand || '',
           image_url: p.image_url || '',
+          compatible_vehicles: p.compatible_vehicles || '',
+          year_from: p.year_from ?? '',
+          year_to: p.year_to ?? '',
+          dimensions: p.dimensions || '',
+          material: p.material || '',
+          specs: p.specs || '',
           active: !!p.active,
           featured: !!p.featured,
         })
@@ -71,7 +83,12 @@ export default function ProductEdit() {
     try {
       // Si la foto elegida es del catálogo del repo, se sube a Cloudinary.
       const image_url = await api.cloudinaryFromRepo(form.image_url)
-      const payload = { ...form, image_url }
+      const payload = {
+        ...form,
+        image_url,
+        year_from: form.year_from === '' ? null : Number(form.year_from),
+        year_to: form.year_to === '' ? null : Number(form.year_to),
+      }
       if (isNew) await api.createProduct(payload)
       else await api.updateProduct(id, payload)
       navigate('/admin/productos')
@@ -173,6 +190,67 @@ export default function ProductEdit() {
           onClose={() => setPickerOpen(false)}
           onSelect={(url) => set('image_url', url)}
         />
+
+        <h3 className="field-group-title">Ficha técnica</h3>
+
+        <div className="field">
+          <label>Vehículos compatibles</label>
+          <input
+            value={form.compatible_vehicles}
+            onChange={(e) => set('compatible_vehicles', e.target.value)}
+            placeholder="Ej: Toyota Hilux, Ford Ranger, Nissan Frontier"
+          />
+        </div>
+
+        <div className="row-2">
+          <div className="field">
+            <label>Año desde</label>
+            <input
+              type="number"
+              value={form.year_from}
+              onChange={(e) => set('year_from', e.target.value)}
+              placeholder="Ej: 2015"
+            />
+          </div>
+          <div className="field">
+            <label>Año hasta</label>
+            <input
+              type="number"
+              value={form.year_to}
+              onChange={(e) => set('year_to', e.target.value)}
+              placeholder="Ej: 2023 (vacío = mismo año)"
+            />
+          </div>
+        </div>
+
+        <div className="row-2">
+          <div className="field">
+            <label>Medidas</label>
+            <input
+              value={form.dimensions}
+              onChange={(e) => set('dimensions', e.target.value)}
+              placeholder="Ej: 120 x 90 x 15 cm"
+            />
+          </div>
+          <div className="field">
+            <label>Material</label>
+            <input
+              value={form.material}
+              onChange={(e) => set('material', e.target.value)}
+              placeholder="Ej: Aluminio, Acero inoxidable"
+            />
+          </div>
+        </div>
+
+        <div className="field">
+          <label>Especificaciones adicionales</label>
+          <textarea
+            rows={2}
+            value={form.specs}
+            onChange={(e) => set('specs', e.target.value)}
+            placeholder="Capacidad de carga, color, garantía, etc."
+          />
+        </div>
 
         <div className="field">
           <label className="row" style={{ gap: 8, textTransform: 'none' }}>

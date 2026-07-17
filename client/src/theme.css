@@ -199,6 +199,15 @@ h3 {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+.field-group-title {
+  font-size: 0.95rem;
+  color: var(--orange-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 1.6rem 0 0.9rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+}
 input,
 textarea,
 select {
