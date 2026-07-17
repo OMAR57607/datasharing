@@ -141,15 +141,30 @@ export const api = {
 
   async confirmImport(products) {
     // Inserta los productos elegidos directamente en Supabase.
-    // Omite los que tengan un SKU ya existente.
-    const skus = products.map((p) => p.sku).filter(Boolean)
+    // Omite los que tengan un SKU ya existente en la BD y también los
+    // SKU repetidos dentro del mismo lote (el catálogo trae códigos que
+    // aparecen en varias tablas), que si no rompen el insert entero.
+    const withName = products.filter((p) => p.name)
+    const skus = withName.map((p) => p.sku).filter(Boolean)
     let existing = []
     if (skus.length) {
       const { data } = await supabase.from('products').select('sku').in('sku', skus)
       existing = (data || []).map((r) => r.sku)
     }
-    const toInsert = products.filter((p) => p.name && !(p.sku && existing.includes(p.sku)))
-    const skipped = products.filter((p) => p.sku && existing.includes(p.sku)).map((p) => p.sku)
+    const existingSet = new Set(existing)
+    const seen = new Set()
+    const toInsert = []
+    const skipped = []
+    for (const p of withName) {
+      if (p.sku) {
+        if (existingSet.has(p.sku) || seen.has(p.sku)) {
+          skipped.push(p.sku)
+          continue
+        }
+        seen.add(p.sku)
+      }
+      toInsert.push(p)
+    }
     if (toInsert.length) {
       // Sube a Cloudinary las fotos del catálogo elegidas antes de guardar.
       const rows = []
