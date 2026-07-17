@@ -1282,6 +1282,44 @@
 .detail-price {
   margin: 1.4rem 0;
 }
+/* ===== Tabla de productos (admin) ===== */
+.filter-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.th-sort {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.th-sort:hover {
+  color: var(--orange-2);
+}
+.admin-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.admin-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.admin-thumb span {
+  font-size: 1.1rem;
+  opacity: 0.5;
+}
+.input-warn {
+  border-color: rgba(226, 35, 26, 0.6) !important;
+}
+
 /* ===== Gestor de fotos (editor) ===== */
 .img-manager {
   display: grid;
