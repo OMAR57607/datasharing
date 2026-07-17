@@ -151,16 +151,19 @@ export const api = {
     const toInsert = products.filter((p) => p.name && !(p.sku && existing.includes(p.sku)))
     const skipped = products.filter((p) => p.sku && existing.includes(p.sku)).map((p) => p.sku)
     if (toInsert.length) {
-      const { error } = await supabase.from('products').insert(
-        toInsert.map((p) => ({
+      // Sube a Cloudinary las fotos del catálogo elegidas antes de guardar.
+      const rows = []
+      for (const p of toInsert) {
+        rows.push({
           sku: p.sku || null,
           name: p.name,
           description: p.description || null,
           category: p.category || null,
           brand: p.brand || null,
-          image_url: p.image_url || null,
-        }))
-      )
+          image_url: (await api.cloudinaryFromRepo(p.image_url)) || null,
+        })
+      }
+      const { error } = await supabase.from('products').insert(rows)
       throwIf(error)
     }
     return { imported: toInsert.length, skipped }
@@ -178,5 +181,26 @@ export const api = {
     const data = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(data.error || 'Error al subir la imagen')
     return data
+  },
+
+  // Mueve una foto del catálogo del repo (/productos/...) a Cloudinary y
+  // devuelve la URL de Cloudinary. Las URLs que ya son de Cloudinary o
+  // externas se devuelven sin cambios. Si Cloudinary falla, se conserva la
+  // ruta del repo (la imagen sigue funcionando servida desde el sitio).
+  async cloudinaryFromRepo(imageUrl) {
+    if (!imageUrl || !imageUrl.startsWith('/productos/')) return imageUrl
+    try {
+      const absolute = window.location.origin + imageUrl
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { ...(await authHeader()), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: absolute }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Error al subir a Cloudinary')
+      return data.url
+    } catch {
+      return imageUrl
+    }
   },
 }
