@@ -1,5 +1,6 @@
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
+import ConfigBanner from '../../components/ConfigBanner.jsx'
 
 export default function AdminLayout() {
   const { user, logout } = useAuth()
@@ -11,7 +12,10 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="admin">
+    <div className="admin" style={{ gridTemplateRows: 'auto 1fr', gridTemplateColumns: '240px 1fr' }}>
+      <div style={{ gridColumn: '1 / -1' }}>
+        <ConfigBanner />
+      </div>
       <aside className="admin-side">
         <Link to="/admin" className="brand">
           <img src="/logo.jpg" alt="Nitro Garage" style={{ height: 38 }} />

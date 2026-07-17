@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
+import ConfigBanner from '../../components/ConfigBanner.jsx'
 
 export default function Login() {
   const { login } = useAuth()
@@ -25,8 +26,13 @@ export default function Login() {
   }
 
   return (
-    <div className="login-wrap">
-      <form className="card login-card" onSubmit={onSubmit}>
+    <div className="login-wrap" style={{ flexDirection: 'column' }}>
+      <ConfigBanner />
+      <form
+        className="card login-card"
+        style={{ margin: 'auto' }}
+        onSubmit={onSubmit}
+      >
         <div className="brand">
           <img src="/logo.jpg" alt="Nitro Garage" style={{ height: 48 }} />
         </div>

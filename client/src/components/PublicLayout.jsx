@@ -1,8 +1,10 @@
 import { NavLink, Link, Outlet } from 'react-router-dom'
+import ConfigBanner from './ConfigBanner.jsx'
 
 export default function PublicLayout() {
   return (
     <div className="site">
+      <ConfigBanner />
       <header className="navbar">
         <div className="container navbar-inner">
           <Link to="/" className="brand">
