@@ -191,8 +191,14 @@ export default function ProductEdit() {
               checked={form.featured}
               onChange={(e) => set('featured', e.target.checked)}
             />
-            ⭐ Destacado (aparece primero en "más solicitados")
+            ⭐ Fijar arriba en "más solicitados" (opcional)
           </label>
+          <p className="muted" style={{ fontSize: '0.8rem', marginTop: 4 }}>
+            El ranking de "más solicitados" es automático: se calcula solo,
+            según las veces que los clientes ven cada producto en la tienda.
+            Esta casilla es opcional y solo sirve para forzar un producto
+            arriba del ranking (por ejemplo, para promocionar algo nuevo).
+          </p>
         </div>
 
         <div className="row" style={{ marginTop: '0.5rem' }}>
