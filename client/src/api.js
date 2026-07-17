@@ -13,6 +13,31 @@ function throwIf(error) {
 }
 
 export const api = {
+  // ---------- Cotizaciones (leads) ----------
+  async createQuote(payload) {
+    const { data, error } = await supabase.from('quotes').insert(payload).select().single()
+    throwIf(error)
+    return data
+  },
+  async listQuotes() {
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('*')
+      .order('created_at', { ascending: false })
+    throwIf(error)
+    return data
+  },
+  async updateQuoteStatus(id, status) {
+    const { data, error } = await supabase
+      .from('quotes')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single()
+    throwIf(error)
+    return data
+  },
+
   // ---------- Productos (Supabase directo, protegido por RLS) ----------
   async listProducts({ category, search, includeInactive } = {}) {
     let q = supabase.from('products').select('*').order('created_at', { ascending: false })

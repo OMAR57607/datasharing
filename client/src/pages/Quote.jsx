@@ -2,14 +2,38 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuote } from '../context/QuoteContext.jsx'
 import { formatPrice } from '../components/ProductCard.jsx'
-import { WHATSAPP, STORE_NAME } from '../lib/config.js'
+import { api } from '../api.js'
+import { WHATSAPP, STORE_NAME, STORE_EMAIL, WHATSAPP_DISPLAY } from '../lib/config.js'
+
+const IVA_RATE = 0.16
 
 export default function Quote() {
   const { items, remove, setQty, clear, count } = useQuote()
-  const [form, setForm] = useState({ nombre: '', telefono: '', email: '', notas: '' })
+  const [form, setForm] = useState({ nombre: '', telefono: '', email: '', vehiculo: '', notas: '' })
   const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const set = (k, v) => setForm((prev) => ({ ...prev, [k]: v }))
+
+  const priced = items.filter((i) => i.price != null)
+  const total = priced.reduce((s, i) => s + i.price * i.qty, 0)
+  const subtotal = total / (1 + IVA_RATE)
+  const iva = total - subtotal
+  const hasUnpriced = items.some((i) => i.price == null)
+
+  function validate() {
+    if (!form.nombre.trim() || !form.telefono.trim()) {
+      setError('El nombre y el teléfono son obligatorios.')
+      return false
+    }
+    if (items.length === 0) {
+      setError('Tu lista está vacía.')
+      return false
+    }
+    setError('')
+    return true
+  }
 
   function buildMessage() {
     const lines = [
@@ -18,36 +42,57 @@ export default function Quote() {
       `*Nombre:* ${form.nombre}`,
       `*Teléfono:* ${form.telefono}`,
       form.email ? `*Email:* ${form.email}` : null,
+      form.vehiculo ? `*Vehículo:* ${form.vehiculo}` : null,
       '',
       '*Productos:*',
       ...items.map(
-        (i) => `• ${i.qty} x ${i.name}${i.sku ? ` (${i.sku})` : ''}`
+        (i) =>
+          `• ${i.qty} x ${i.name}${i.sku ? ` (${i.sku})` : ''}` +
+          (i.price != null ? ` — ${formatPrice(i.price * i.qty)}` : ' — a consultar')
       ),
+      priced.length ? `\n*Total estimado:* ${formatPrice(total)} (IVA incl.)` : null,
       form.notas ? `\n*Notas:* ${form.notas}` : null,
     ].filter((l) => l !== null)
     return lines.join('\n')
   }
 
-  function onSubmit(e) {
-    e.preventDefault()
-    if (!form.nombre.trim() || !form.telefono.trim()) {
-      setError('El nombre y el teléfono son obligatorios.')
-      return
-    }
-    if (items.length === 0) {
-      setError('Tu lista está vacía.')
-      return
-    }
-    setError('')
+  function onWhatsApp() {
+    if (!validate()) return
     const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(buildMessage())}`
     window.open(url, '_blank', 'noopener')
+  }
+
+  function onPdf() {
+    if (!validate()) return
+    window.print()
+  }
+
+  async function onSave() {
+    if (!validate()) return
+    setSaving(true)
+    try {
+      await api.createQuote({
+        customer_name: form.nombre,
+        phone: form.telefono,
+        email: form.email || null,
+        vehicle: form.vehiculo || null,
+        notes: form.notas || null,
+        items: items.map((i) => ({ id: i.id, name: i.name, sku: i.sku, qty: i.qty, price: i.price })),
+        total,
+      })
+      setSaved(true)
+    } catch (e) {
+      setError('No se pudo guardar: ' + e.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (items.length === 0) {
     return (
       <section className="section">
         <div className="container">
-          <h1 className="display">Mi lista de cotización</h1>
+          <h1 className="display">Tu cotización</h1>
           <div className="empty-state" style={{ marginTop: '1.5rem' }}>
             <p>Tu lista está vacía.</p>
             <Link to="/catalogo" className="btn btn-primary btn-sm">
@@ -61,18 +106,33 @@ export default function Quote() {
 
   return (
     <section className="section">
-      <div className="container">
-        <div className="section-head">
-          <h1 className="display">
-            Mi lista de <span className="text-grad">cotización</span>
-          </h1>
-          <button className="btn btn-ghost btn-sm" onClick={clear}>
-            Vaciar lista
-          </button>
-        </div>
+      <div className="container quote-page">
+        <Link to="/catalogo" className="muted">
+          ← Seguir agregando
+        </Link>
+        <h1 className="display" style={{ marginTop: '0.6rem' }}>
+          Tu <span className="text-grad">cotización</span>
+        </h1>
+        <p className="muted">
+          Ajusta cantidades, llena tus datos y guárdala, descárgala o envíala. Los
+          precios incluyen IVA.
+        </p>
 
-        <div className="quote-layout">
-          {/* Items */}
+        {error && <div className="error-box" style={{ margin: '1rem 0' }}>{error}</div>}
+        {saved && (
+          <div className="success-box" style={{ margin: '1rem 0' }}>
+            ✓ Cotización guardada. Nuestro equipo te contactará.
+          </div>
+        )}
+
+        {/* Accesorios */}
+        <div className="card quote-block">
+          <div className="quote-block-head">
+            <h3>Accesorios ({count})</h3>
+            <button className="linklike" onClick={clear}>
+              Vaciar
+            </button>
+          </div>
           <div className="quote-items">
             {items.map((i) => (
               <div key={i.id} className="quote-item">
@@ -83,43 +143,50 @@ export default function Quote() {
                   <Link to={`/producto/${i.id}`} className="quote-name">
                     {i.name}
                   </Link>
-                  {i.sku && <span className="product-sku">SKU: {i.sku}</span>}
-                  <span className="quote-price">
-                    {i.price != null ? formatPrice(i.price) : 'Precio a consultar'}
-                  </span>
+                  {i.sku && <span className="product-sku">Nº parte {i.sku}</span>}
                 </div>
-                <div className="quote-actions">
+                <div className="quote-item-actions">
                   <div className="qty">
-                    <button onClick={() => setQty(i.id, i.qty - 1)} aria-label="Menos">
-                      −
-                    </button>
+                    <button onClick={() => setQty(i.id, i.qty - 1)} aria-label="Menos">−</button>
                     <span>{i.qty}</span>
-                    <button onClick={() => setQty(i.id, i.qty + 1)} aria-label="Más">
-                      +
-                    </button>
+                    <button onClick={() => setQty(i.id, i.qty + 1)} aria-label="Más">+</button>
                   </div>
-                  <button className="btn btn-danger btn-sm" onClick={() => remove(i.id)}>
-                    Quitar
+                  <div className="quote-line-price">
+                    {i.price != null ? formatPrice(i.price * i.qty) : 'A consultar'}
+                  </div>
+                  <button className="icon-btn" onClick={() => remove(i.id)} aria-label="Quitar" title="Quitar">
+                    🗑️
                   </button>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Formulario */}
-          <form className="quote-form card" onSubmit={onSubmit}>
-            <h3>Tus datos</h3>
-            <p className="muted" style={{ marginTop: 0, fontSize: '0.88rem' }}>
-              {count} artículo(s). Te contactamos con la cotización.
-            </p>
-            {error && <div className="error-box" style={{ marginBottom: 12 }}>{error}</div>}
+          {priced.length > 0 && (
+            <div className="quote-totals">
+              <div><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+              <div><span>IVA (16%)</span><span>{formatPrice(iva)}</span></div>
+              <div className="grand"><span>Total</span><span>{formatPrice(total)}</span></div>
+              {hasUnpriced && (
+                <p className="muted" style={{ fontSize: '0.82rem', marginTop: 6 }}>
+                  Algunos productos son "a consultar" y no se incluyen en el total.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Tus datos */}
+        <div className="card quote-block">
+          <h3>Tus datos</h3>
+          <p className="muted" style={{ marginTop: 0, fontSize: '0.88rem' }}>
+            Nombre y teléfono son necesarios para guardar, descargar o enviar tu
+            cotización.
+          </p>
+          <div className="row-2">
             <div className="field">
               <label>Nombre *</label>
-              <input
-                value={form.nombre}
-                onChange={(e) => set('nombre', e.target.value)}
-                required
-              />
+              <input value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
             </div>
             <div className="field">
               <label>Teléfono *</label>
@@ -131,29 +198,110 @@ export default function Quote() {
                 required
               />
             </div>
+          </div>
+          <div className="row-2">
             <div className="field">
-              <label>Email (opcional)</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => set('email', e.target.value)}
-              />
+              <label>Correo (opcional)</label>
+              <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
             </div>
             <div className="field">
-              <label>Notas (opcional)</label>
-              <textarea
-                rows={3}
-                value={form.notas}
-                onChange={(e) => set('notas', e.target.value)}
-                placeholder="Modelo de tu vehículo, dudas, etc."
-              />
+              <label>Vehículo (opcional)</label>
+              <input value={form.vehiculo} onChange={(e) => set('vehiculo', e.target.value)} placeholder="Ej. Ford Ranger 2022" />
             </div>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-              💬 Enviar cotización por WhatsApp
-            </button>
-          </form>
+          </div>
+          <div className="field">
+            <label>Notas (opcional)</label>
+            <textarea rows={3} value={form.notas} onChange={(e) => set('notas', e.target.value)} placeholder="Comentarios o dudas para tu asesor" />
+          </div>
+        </div>
+
+        {/* Acciones */}
+        <div className="quote-actions-bar">
+          <button className="btn btn-primary" onClick={onWhatsApp}>
+            💬 Enviar por WhatsApp
+          </button>
+          <button className="btn btn-ghost" onClick={onPdf}>
+            ⬇ Descargar PDF
+          </button>
+          <button className="btn btn-ice" onClick={onSave} disabled={saving}>
+            {saving ? 'Guardando…' : '💾 Guardar cotización'}
+          </button>
         </div>
       </div>
+
+      {/* Documento imprimible (solo visible al imprimir/descargar PDF) */}
+      <QuoteDocument form={form} items={items} subtotal={subtotal} iva={iva} total={total} />
     </section>
+  )
+}
+
+function QuoteDocument({ form, items, subtotal, iva, total }) {
+  const now = new Date()
+  return (
+    <div className="print-doc" aria-hidden="true">
+      <div className="print-head">
+        <div>
+          <img src="/logo.jpg" alt={STORE_NAME} className="print-logo" />
+          <strong>{STORE_NAME}</strong>
+          <div className="print-muted">Venta de accesorios automotrices · Puebla, México</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div className="print-title">COTIZACIÓN</div>
+          <div className="print-muted">
+            {now.toLocaleDateString('es-MX')} · {now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div className="print-cliente">
+        <div><strong>Cliente:</strong> {form.nombre || '—'}</div>
+        <div><strong>Teléfono:</strong> {form.telefono || '—'}</div>
+        {form.email && <div><strong>Correo:</strong> {form.email}</div>}
+        {form.vehiculo && <div><strong>Vehículo:</strong> {form.vehiculo}</div>}
+      </div>
+      <table className="print-table">
+        <thead>
+          <tr>
+            <th>Accesorio</th>
+            <th>Cant.</th>
+            <th>Unitario</th>
+            <th>Importe</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((i) => (
+            <tr key={i.id}>
+              <td>
+                {i.name}
+                {i.sku ? <div className="print-muted">Nº parte {i.sku}</div> : null}
+              </td>
+              <td>{i.qty}</td>
+              <td>{i.price != null ? formatPrice(i.price) : 'A consultar'}</td>
+              <td>{i.price != null ? formatPrice(i.price * i.qty) : '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="print-totals">
+        <div><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+        <div><span>IVA (16%)</span><span>{formatPrice(iva)}</span></div>
+        <div className="grand"><span>Total</span><span>{formatPrice(total)}</span></div>
+        <div className="print-muted">Precios en MXN, IVA incluido.</div>
+      </div>
+      {form.notas && (
+        <p className="print-muted"><strong>Notas:</strong> {form.notas}</p>
+      )}
+      <div className="print-legal">
+        <strong>Información y términos de la cotización:</strong>
+        <ul>
+          <li><strong>Vigencia:</strong> válida por 15 días naturales, sujeta a disponibilidad de inventario.</li>
+          <li><strong>Precios e impuestos:</strong> en Moneda Nacional (MXN) e incluyen IVA (16%).</li>
+          <li><strong>Carácter informativo:</strong> este documento es una estimación presupuestaria y no constituye factura ni obligación de compra.</li>
+        </ul>
+      </div>
+      <div className="print-foot print-muted">
+        {STORE_NAME} · {WHATSAPP_DISPLAY} · {STORE_EMAIL}
+      </div>
+    </div>
   )
 }

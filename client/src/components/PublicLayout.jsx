@@ -1,6 +1,7 @@
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import ConfigBanner from './ConfigBanner.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
+import CartFAB from './CartFAB.jsx'
 import { useQuote } from '../context/QuoteContext.jsx'
 
 export default function PublicLayout() {
@@ -35,6 +36,8 @@ export default function PublicLayout() {
       <main className="site-main">
         <Outlet />
       </main>
+
+      <CartFAB />
 
       <footer className="footer">
         <div className="container footer-grid">
