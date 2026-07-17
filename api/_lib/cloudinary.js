@@ -20,6 +20,19 @@ export function uploadBuffer(buffer, { folder = 'nitro-garage', resourceType = '
 }
 
 /**
+ * Sube a Cloudinary indicándole una URL pública: Cloudinary la descarga
+ * por su cuenta (útil para archivos grandes que no conviene reenviar por
+ * la Function).
+ */
+export function uploadRemote(url, { folder = 'nitro-garage', resourceType = 'image', publicId } = {}) {
+  return cloudinary.uploader.upload(url, {
+    folder,
+    resource_type: resourceType,
+    public_id: publicId,
+  })
+}
+
+/**
  * URL de una página del PDF como imagen (Cloudinary convierte el PDF
  * a imágenes por página de forma nativa).
  */
