@@ -1,0 +1,19 @@
+{
+  "name": "nitro-garage",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Nitro Garage — tienda de accesorios automotrices (React + Supabase + Cloudinary, deploy en Vercel)",
+  "packageManager": "pnpm@10.33.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "dev:client": "pnpm --filter nitro-garage-client dev",
+    "build": "pnpm --filter nitro-garage-client build"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
+    "busboy": "^1.6.0",
+    "cloudinary": "^2.10.0",
+    "pdf-parse": "^1.1.1"
+  }
+}
