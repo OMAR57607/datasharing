@@ -33,10 +33,21 @@ export function parseVehicle(name = '') {
   return { make, yearFrom, yearTo }
 }
 
+// Normaliza una marca escrita a mano a la forma canónica del catálogo, para
+// que "toyota", "TOYOTA" o "Toyota Hilux" se agrupen con "Toyota" del filtro.
+export function normalizeMake(text = '') {
+  const upper = String(text).toUpperCase()
+  for (const m of MAKES) if (upper.includes(m)) return displayMake(m)
+  const t = String(text).trim()
+  return t || null
+}
+
 // Marca de vehículo efectiva: la manual (vehicle_make) tiene prioridad;
 // si está vacía, cae a la detectada automáticamente del nombre.
 export function makeOf(product = {}) {
-  return product.vehicle_make || parseVehicle(product.name || '').make || null
+  const manual = (product.vehicle_make || '').trim()
+  if (manual) return normalizeMake(manual)
+  return parseVehicle(product.name || '').make || null
 }
 
 // Datos de vehículo efectivos: combina los campos manuales del producto
@@ -44,7 +55,7 @@ export function makeOf(product = {}) {
 export function vehicleOf(product = {}) {
   const parsed = parseVehicle(product.name || '')
   return {
-    make: product.vehicle_make || parsed.make,
+    make: makeOf(product),
     yearFrom: product.year_from ?? parsed.yearFrom,
     yearTo: product.year_to ?? parsed.yearTo,
   }
