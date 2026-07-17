@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../../api.js'
 import ImagePicker from '../../components/ImagePicker.jsx'
+import { parseVehicle } from '../../lib/vehicles.js'
 
 const MAX_IMAGES = 4
 
@@ -13,6 +14,7 @@ const EMPTY = {
   brand: '',
   images: [],
   compatible_vehicles: '',
+  vehicle_make: '',
   year_from: '',
   year_to: '',
   dimensions: '',
@@ -92,6 +94,7 @@ export default function ProductEdit() {
               ? [p.image_url]
               : [],
           compatible_vehicles: p.compatible_vehicles || '',
+          vehicle_make: p.vehicle_make || '',
           year_from: p.year_from ?? '',
           year_to: p.year_to ?? '',
           dimensions: p.dimensions || '',
@@ -122,6 +125,7 @@ export default function ProductEdit() {
         ...form,
         images,
         image_url: images[0] || null, // portada = primera foto (compatibilidad)
+        vehicle_make: form.vehicle_make.trim() || null,
         year_from: form.year_from === '' ? null : Number(form.year_from),
         year_to: form.year_to === '' ? null : Number(form.year_to),
       }
@@ -267,13 +271,31 @@ export default function ProductEdit() {
 
         <h3 className="field-group-title">Ficha técnica</h3>
 
-        <div className="field">
-          <label>Vehículos compatibles</label>
-          <input
-            value={form.compatible_vehicles}
-            onChange={(e) => set('compatible_vehicles', e.target.value)}
-            placeholder="Ej: Toyota Hilux, Ford Ranger, Nissan Frontier"
-          />
+        <div className="row-2">
+          <div className="field">
+            <label>Marca de vehículo (filtro del catálogo)</label>
+            <input
+              value={form.vehicle_make}
+              onChange={(e) => set('vehicle_make', e.target.value)}
+              placeholder={
+                parseVehicle(form.name).make
+                  ? `Automático: ${parseVehicle(form.name).make}`
+                  : 'Ej: Toyota, Ford, Nissan'
+              }
+            />
+            <span className="field-hint">
+              Si lo dejás vacío, se detecta solo del nombre. Cargalo para
+              corregir o forzar la marca con la que se filtra en el catálogo.
+            </span>
+          </div>
+          <div className="field">
+            <label>Vehículos compatibles</label>
+            <input
+              value={form.compatible_vehicles}
+              onChange={(e) => set('compatible_vehicles', e.target.value)}
+              placeholder="Ej: Toyota Hilux, Ford Ranger"
+            />
+          </div>
         </div>
 
         <div className="row-2">

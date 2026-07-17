@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
-import { parseVehicle, matchesYear } from '../lib/vehicles.js'
+import { vehicleOf, matchesYear } from '../lib/vehicles.js'
 import { observeReveal } from '../lib/anim.js'
 
 const SORTS = [
@@ -44,7 +44,7 @@ export default function Catalog() {
 
   // Enriquecer cada producto con su vehículo parseado (memo).
   const enriched = useMemo(
-    () => all.map((p) => ({ ...p, vehicle: parseVehicle(p.name) })),
+    () => all.map((p) => ({ ...p, vehicle: vehicleOf(p) })),
     [all]
   )
 

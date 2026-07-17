@@ -33,6 +33,23 @@ export function parseVehicle(name = '') {
   return { make, yearFrom, yearTo }
 }
 
+// Marca de vehículo efectiva: la manual (vehicle_make) tiene prioridad;
+// si está vacía, cae a la detectada automáticamente del nombre.
+export function makeOf(product = {}) {
+  return product.vehicle_make || parseVehicle(product.name || '').make || null
+}
+
+// Datos de vehículo efectivos: combina los campos manuales del producto
+// (marca y años cargados a mano) con la detección automática del nombre.
+export function vehicleOf(product = {}) {
+  const parsed = parseVehicle(product.name || '')
+  return {
+    make: product.vehicle_make || parsed.make,
+    yearFrom: product.year_from ?? parsed.yearFrom,
+    yearTo: product.year_to ?? parsed.yearTo,
+  }
+}
+
 // ¿El producto aplica al año indicado?
 export function matchesYear(vehicle, year) {
   if (!year) return true

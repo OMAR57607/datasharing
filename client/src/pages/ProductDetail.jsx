@@ -51,10 +51,12 @@ export default function ProductDetail() {
   const mainImg = gallery[activeImg] || gallery[0]
   // Prioriza los campos explícitos cargados en el admin; si no están
   // cargados, cae de vuelta al año detectado por heurística en el nombre.
+  const make = product.vehicle_make || v.make
   const yearFrom = product.year_from ?? v.yearFrom
   const yearTo = product.year_to ?? v.yearTo
 
   const specRows = [
+    ['Marca de vehículo', make],
     ['Vehículos compatibles', product.compatible_vehicles],
     [
       'Años',
@@ -102,7 +104,7 @@ export default function ProductDetail() {
               {product.category && (
                 <span className="badge badge-cat">{product.category}</span>
               )}
-              {v.make && <span className="badge badge-veh">{v.make}</span>}
+              {make && <span className="badge badge-veh">{make}</span>}
               {yearFrom && (
                 <span className="badge badge-veh">
                   {yearFrom}

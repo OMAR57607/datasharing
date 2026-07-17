@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuote } from '../context/QuoteContext.jsx'
-import { parseVehicle } from '../lib/vehicles.js'
+import { makeOf } from '../lib/vehicles.js'
 import { WHATSAPP } from '../lib/config.js'
 
 export function formatPrice(value) {
@@ -16,7 +16,7 @@ export function formatPrice(value) {
 export default function ProductCard({ product }) {
   const { add, has } = useQuote()
   const inList = has(product.id)
-  const v = parseVehicle(product.name)
+  const make = makeOf(product)
   const photoCount = Array.isArray(product.images) ? product.images.length : 0
   const waHref = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
     `Hola, me interesa: ${product.name}${product.sku ? ' (' + product.sku + ')' : ''}`
@@ -30,7 +30,7 @@ export default function ProductCard({ product }) {
         ) : (
           <span>🔧</span>
         )}
-        {v.make && <span className="veh-badge">{v.make}</span>}
+        {make && <span className="veh-badge">{make}</span>}
         {product.featured && <span className="orig-badge">★ Destacado</span>}
         {photoCount > 1 && <span className="photo-count">📷 {photoCount}</span>}
       </Link>

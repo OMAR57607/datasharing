@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
-import { parseVehicle } from '../lib/vehicles.js'
+import { makeOf } from '../lib/vehicles.js'
 import HeroFX from '../components/HeroFX.jsx'
 import { revealStagger, observeReveal } from '../lib/anim.js'
 
@@ -66,7 +66,7 @@ export default function Home() {
   const makes = useMemo(() => {
     const m = new Map()
     for (const p of all) {
-      const mk = parseVehicle(p.name).make
+      const mk = makeOf(p)
       if (mk) m.set(mk, (m.get(mk) || 0) + 1)
     }
     return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)

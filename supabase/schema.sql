@@ -15,6 +15,7 @@ create table if not exists public.products (
   images        jsonb not null default '[]'::jsonb, -- galería, hasta 4 fotos
   current_price numeric(12,2),
   compatible_vehicles text,         -- ej. "Toyota Hilux, Ford Ranger"
+  vehicle_make  text,               -- marca de vehículo para el filtro (override del auto)
   year_from     smallint,
   year_to       smallint,
   dimensions    text,               -- medidas, ej. "120 x 90 x 15 cm"
