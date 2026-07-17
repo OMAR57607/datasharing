@@ -25,6 +25,7 @@ export default function AdminLayout() {
           </NavLink>
           <NavLink to="/admin/productos">📦 Productos</NavLink>
           <NavLink to="/admin/importar">📄 Importar PDF</NavLink>
+          <NavLink to="/admin/fotos">🖼️ Asignar fotos</NavLink>
           <NavLink to="/admin/precios">💲 Carga de precios</NavLink>
           <div className="spacer" />
           <Link to="/" className="muted" style={{ fontSize: '0.85rem' }}>
