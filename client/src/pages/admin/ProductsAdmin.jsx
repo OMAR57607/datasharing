@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api.js'
 import { formatPrice } from '../../components/ProductCard.jsx'
+import Pagination from '../../components/Pagination.jsx'
+
+const PAGE_SIZE = 20
 
 const FILTERS = [
   { value: 'all', label: 'Todos' },
@@ -19,6 +22,7 @@ export default function ProductsAdmin() {
   const [filter, setFilter] = useState('all')
   const [sortKey, setSortKey] = useState('created') // sku | name | price | created
   const [sortDir, setSortDir] = useState('desc')
+  const [page, setPage] = useState(1)
 
   function load() {
     setLoading(true)
@@ -71,6 +75,15 @@ export default function ProductsAdmin() {
     }),
     [products]
   )
+
+  // Vuelve a la primera página al cambiar búsqueda, filtro u orden.
+  useEffect(() => {
+    setPage(1)
+  }, [search, filter, sortKey, sortDir])
+
+  const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount)
+  const pageItems = shown.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   async function onDelete(id) {
     if (!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.'))
@@ -146,6 +159,7 @@ export default function ProductsAdmin() {
         <>
           <p className="muted" style={{ margin: '0 0 0.6rem', fontSize: '0.85rem' }}>
             {shown.length} producto(s)
+            {pageCount > 1 && ` · página ${safePage} de ${pageCount}`}
           </p>
           <div className="table-wrap">
             <table>
@@ -167,7 +181,7 @@ export default function ProductsAdmin() {
                 </tr>
               </thead>
               <tbody>
-                {shown.map((p) => (
+                {pageItems.map((p) => (
                   <tr key={p.id}>
                     <td>
                       <div className="admin-thumb">
@@ -238,6 +252,7 @@ export default function ProductsAdmin() {
               </tbody>
             </table>
           </div>
+          <Pagination page={safePage} pageCount={pageCount} onPage={setPage} />
         </>
       )}
     </>

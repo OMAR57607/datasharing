@@ -2,8 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
+import Pagination from '../components/Pagination.jsx'
 import { vehicleOf, matchesYear } from '../lib/vehicles.js'
 import { observeReveal } from '../lib/anim.js'
+
+const PAGE_SIZE = 24
 
 const SORTS = [
   { value: 'popular', label: 'Más solicitados' },
@@ -16,8 +19,8 @@ export default function Catalog() {
   const [params, setParams] = useSearchParams()
   const [all, setAll] = useState([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
   const gridRef = useRef(null)
-  const revealed = useRef(false)
 
   // Estado de filtros (sincronizado con la URL para poder compartir enlaces).
   const search = params.get('q') || ''
@@ -35,12 +38,16 @@ export default function Catalog() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Revelado animado una sola vez, al mostrar los primeros resultados.
+  // Vuelve a la primera página cuando cambian los filtros/orden.
   useEffect(() => {
-    if (loading || revealed.current) return
-    revealed.current = true
+    setPage(1)
+  }, [search, category, make, year, sort])
+
+  // Revelado animado; se re-ejecuta al cambiar de página.
+  useEffect(() => {
+    if (loading) return
     return observeReveal(gridRef.current, '.product-card')
-  }, [loading])
+  }, [loading, page])
 
   // Enriquecer cada producto con su vehículo parseado (memo).
   const enriched = useMemo(
@@ -110,6 +117,15 @@ export default function Catalog() {
   }
 
   const activeFilters = [category, make, year].filter(Boolean).length + (search ? 1 : 0)
+
+  const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount)
+  const pageItems = results.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+  function goToPage(p) {
+    setPage(p)
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <section className="section">
@@ -183,11 +199,18 @@ export default function Catalog() {
                 </button>
               </div>
             ) : (
-              <div className="product-grid" ref={gridRef}>
-                {results.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
+              <>
+                <div className="product-grid" ref={gridRef}>
+                  {pageItems.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+                <Pagination
+                  page={safePage}
+                  pageCount={pageCount}
+                  onPage={goToPage}
+                />
+              </>
             )}
           </div>
         </div>

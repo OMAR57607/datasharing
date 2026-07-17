@@ -1282,6 +1282,46 @@
 .detail-price {
   margin: 1.4rem 0;
 }
+/* ===== Paginación ===== */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 1.6rem 0 0.4rem;
+}
+.page-btn {
+  min-width: 38px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.page-btn:hover:not(:disabled) {
+  border-color: var(--orange);
+  color: var(--orange-2);
+}
+.page-btn.active {
+  background: var(--grad-fire, #ff5a00);
+  border-color: transparent;
+  color: #fff;
+}
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.page-ellipsis {
+  padding: 0 0.3rem;
+  color: var(--text-dim);
+  align-self: flex-end;
+}
+
 /* ===== Tabla de productos (admin) ===== */
 .filter-chips {
   display: flex;
