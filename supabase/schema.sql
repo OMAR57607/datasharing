@@ -14,6 +14,8 @@ create table if not exists public.products (
   image_url     text,               -- URL de Cloudinary
   current_price numeric(12,2),
   active        boolean not null default true,
+  views         integer not null default 0,      -- "solicitudes" para ordenar
+  featured      boolean not null default false,  -- destacado manual (pin)
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
@@ -28,7 +30,18 @@ create table if not exists public.price_history (
 );
 
 create index if not exists idx_products_category on public.products(category);
+create index if not exists idx_products_views on public.products(views desc);
 create index if not exists idx_price_history_product on public.price_history(product_id);
+
+-- ---------- RPC: contar vistas desde el público (anon) ----------
+create or replace function public.increment_product_views(p_id uuid)
+returns void
+language sql security definer
+set search_path = public as $$
+  update public.products set views = views + 1 where id = p_id and active = true;
+$$;
+
+grant execute on function public.increment_product_views(uuid) to anon, authenticated;
 
 -- ---------- Trigger updated_at ----------
 create or replace function public.set_updated_at()

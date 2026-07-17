@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export function formatPrice(value) {
   if (value == null) return null
-  return new Intl.NumberFormat('es-ES', {
+  return new Intl.NumberFormat('es-MX', {
     style: 'currency',
     currency: 'USD',
   }).format(value)
@@ -13,10 +13,11 @@ export default function ProductCard({ product }) {
     <Link to={`/producto/${product.id}`} className="product-card">
       <div className="product-thumb">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} />
+          <img src={product.image_url} alt={product.name} loading="lazy" />
         ) : (
           <span>🔧</span>
         )}
+        {product.featured && <span className="ribbon">★ Destacado</span>}
       </div>
       <div className="product-body">
         {product.category && (
@@ -30,7 +31,7 @@ export default function ProductCard({ product }) {
           ) : (
             <span className="price-na">Consultar precio</span>
           )}
-          <span className="btn btn-ghost btn-sm">Ver</span>
+          <span className="card-cta">Ver →</span>
         </div>
       </div>
     </Link>

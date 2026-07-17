@@ -11,6 +11,7 @@ const EMPTY = {
   brand: '',
   image_url: '',
   active: true,
+  featured: false,
 }
 
 export default function ProductEdit() {
@@ -52,6 +53,7 @@ export default function ProductEdit() {
           brand: p.brand || '',
           image_url: p.image_url || '',
           active: !!p.active,
+          featured: !!p.featured,
         })
       )
       .catch((e) => setError(e.message))
@@ -181,6 +183,15 @@ export default function ProductEdit() {
               onChange={(e) => set('active', e.target.checked)}
             />
             Producto activo (visible en la tienda)
+          </label>
+          <label className="row" style={{ gap: 8, textTransform: 'none', marginTop: 8 }}>
+            <input
+              type="checkbox"
+              style={{ width: 'auto' }}
+              checked={form.featured}
+              onChange={(e) => set('featured', e.target.checked)}
+            />
+            ⭐ Destacado (aparece primero en "más solicitados")
           </label>
         </div>
 
