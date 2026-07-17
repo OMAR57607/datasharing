@@ -3,13 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../../api.js'
 import ImagePicker from '../../components/ImagePicker.jsx'
 
+const MAX_IMAGES = 4
+
 const EMPTY = {
   sku: '',
   name: '',
   description: '',
   category: '',
   brand: '',
-  image_url: '',
+  images: [],
   compatible_vehicles: '',
   year_from: '',
   year_to: '',
@@ -31,14 +33,40 @@ export default function ProductEdit() {
   const [uploading, setUploading] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
 
+  // ---- Galería (hasta 4 fotos) ----
+  function addImage(url) {
+    if (!url) return
+    setForm((prev) => {
+      if (prev.images.length >= MAX_IMAGES || prev.images.includes(url)) return prev
+      return { ...prev, images: [...prev.images, url] }
+    })
+  }
+  function removeImage(idx) {
+    setForm((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))
+  }
+  function makeCover(idx) {
+    setForm((prev) => {
+      const next = [...prev.images]
+      const [pick] = next.splice(idx, 1)
+      return { ...prev, images: [pick, ...next] }
+    })
+  }
+
   async function onImageFile(e) {
-    const f = e.target.files?.[0]
-    if (!f) return
+    const files = Array.from(e.target.files || [])
+    e.target.value = ''
+    if (!files.length) return
     setError('')
     setUploading(true)
     try {
-      const { url } = await api.uploadImage(f)
-      setForm((prev) => ({ ...prev, image_url: url }))
+      let count = form.images.length
+      for (const f of files) {
+        // Respeta el máximo aunque se elijan varios archivos a la vez.
+        if (count >= MAX_IMAGES) break
+        const { url } = await api.uploadImage(f)
+        addImage(url)
+        count++
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -57,7 +85,12 @@ export default function ProductEdit() {
           description: p.description || '',
           category: p.category || '',
           brand: p.brand || '',
-          image_url: p.image_url || '',
+          // Galería nueva; si el producto es viejo (solo image_url), lo migra en vivo.
+          images: Array.isArray(p.images) && p.images.length
+            ? p.images
+            : p.image_url
+              ? [p.image_url]
+              : [],
           compatible_vehicles: p.compatible_vehicles || '',
           year_from: p.year_from ?? '',
           year_to: p.year_to ?? '',
@@ -81,11 +114,14 @@ export default function ProductEdit() {
     setError('')
     setSaving(true)
     try {
-      // Si la foto elegida es del catálogo del repo, se sube a Cloudinary.
-      const image_url = await api.cloudinaryFromRepo(form.image_url)
+      // Las fotos del catálogo del repo se suben a Cloudinary; las demás se dejan igual.
+      const images = (
+        await Promise.all(form.images.map((u) => api.cloudinaryFromRepo(u)))
+      ).filter(Boolean)
       const payload = {
         ...form,
-        image_url,
+        images,
+        image_url: images[0] || null, // portada = primera foto (compatibilidad)
         year_from: form.year_from === '' ? null : Number(form.year_from),
         year_to: form.year_to === '' ? null : Number(form.year_to),
       }
@@ -149,46 +185,84 @@ export default function ProductEdit() {
           />
         </div>
 
-        <div className="row-2">
-          <div className="field">
-            <label>Marca</label>
-            <input
-              value={form.brand}
-              onChange={(e) => set('brand', e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label>Imagen del producto</label>
-            <input
-              value={form.image_url}
-              onChange={(e) => set('image_url', e.target.value)}
-              placeholder="Elegí del catálogo, subí un archivo, o pegá una URL"
-            />
-            <div className="row" style={{ gap: 10, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="field">
+          <label>Marca</label>
+          <input
+            value={form.brand}
+            onChange={(e) => set('brand', e.target.value)}
+          />
+        </div>
+
+        <div className="field">
+          <label>Fotos del producto ({form.images.length}/{MAX_IMAGES})</label>
+          <p className="muted" style={{ fontSize: '0.8rem', margin: '0 0 0.6rem' }}>
+            Podés agregar hasta {MAX_IMAGES} fotos. La primera es la portada (la
+            que se ve en el catálogo).
+          </p>
+
+          {form.images.length > 0 && (
+            <div className="img-manager">
+              {form.images.map((url, idx) => (
+                <div className="img-slot" key={url}>
+                  <img src={url} alt="" />
+                  {idx === 0 && <span className="img-cover-tag">Portada</span>}
+                  <button
+                    type="button"
+                    className="img-remove"
+                    title="Quitar foto"
+                    onClick={() => removeImage(idx)}
+                  >
+                    ✕
+                  </button>
+                  {idx !== 0 && (
+                    <button
+                      type="button"
+                      className="img-cover-btn"
+                      title="Usar como portada"
+                      onClick={() => makeCover(idx)}
+                    >
+                      ★ Portada
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {form.images.length < MAX_IMAGES ? (
+            <div className="row" style={{ gap: 10, marginTop: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className="btn btn-ice btn-sm"
                 onClick={() => setPickerOpen(true)}
               >
-                🖼️ Elegir del catálogo
+                🖼️ Del catálogo
               </button>
-              <input type="file" accept="image/*" onChange={onImageFile} disabled={uploading} />
-              {uploading && <span className="muted">Subiendo…</span>}
-              {form.image_url && (
-                <img
-                  src={form.image_url}
-                  alt=""
-                  style={{ height: 40, width: 40, objectFit: 'cover', borderRadius: 6 }}
+              <label className="btn btn-ghost btn-sm" style={{ cursor: uploading ? 'default' : 'pointer' }}>
+                📁 Subir archivo
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={onImageFile}
+                  disabled={uploading}
                 />
-              )}
+              </label>
+              {uploading && <span className="muted">Subiendo…</span>}
             </div>
-          </div>
+          ) : (
+            <p className="muted" style={{ fontSize: '0.8rem', marginTop: 8 }}>
+              Llegaste al máximo de {MAX_IMAGES} fotos. Quitá una para agregar otra.
+            </p>
+          )}
         </div>
 
         <ImagePicker
           open={pickerOpen}
+          label={form.name}
           onClose={() => setPickerOpen(false)}
-          onSelect={(url) => set('image_url', url)}
+          onSelect={(url) => addImage(url)}
         />
 
         <h3 className="field-group-title">Ficha técnica</h3>

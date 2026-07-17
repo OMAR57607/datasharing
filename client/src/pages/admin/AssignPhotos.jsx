@@ -40,7 +40,7 @@ export default function AssignPhotos() {
     setError('')
     try {
       const image_url = await api.cloudinaryFromRepo(repoUrl)
-      const updated = await api.updateProduct(product.id, { image_url })
+      const updated = await api.updateProduct(product.id, { image_url, images: [image_url] })
       setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)))
     } catch (e) {
       setError(e.message)
@@ -54,7 +54,7 @@ export default function AssignPhotos() {
     setError('')
     try {
       const { url } = await api.uploadImage(file)
-      const updated = await api.updateProduct(product.id, { image_url: url })
+      const updated = await api.updateProduct(product.id, { image_url: url, images: [url] })
       setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)))
     } catch (e) {
       setError(e.message)

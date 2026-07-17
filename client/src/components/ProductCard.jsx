@@ -17,6 +17,7 @@ export default function ProductCard({ product }) {
   const { add, has } = useQuote()
   const inList = has(product.id)
   const v = parseVehicle(product.name)
+  const photoCount = Array.isArray(product.images) ? product.images.length : 0
   const waHref = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
     `Hola, me interesa: ${product.name}${product.sku ? ' (' + product.sku + ')' : ''}`
   )}`
@@ -31,6 +32,7 @@ export default function ProductCard({ product }) {
         )}
         {v.make && <span className="veh-badge">{v.make}</span>}
         {product.featured && <span className="orig-badge">★ Destacado</span>}
+        {photoCount > 1 && <span className="photo-count">📷 {photoCount}</span>}
       </Link>
 
       <div className="product-body">

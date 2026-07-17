@@ -11,7 +11,8 @@ create table if not exists public.products (
   description   text,
   category      text,
   brand         text,
-  image_url     text,               -- URL de Cloudinary
+  image_url     text,               -- URL de Cloudinary (portada = images[0])
+  images        jsonb not null default '[]'::jsonb, -- galería, hasta 4 fotos
   current_price numeric(12,2),
   compatible_vehicles text,         -- ej. "Toyota Hilux, Ford Ranger"
   year_from     smallint,

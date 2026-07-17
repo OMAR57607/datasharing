@@ -10,9 +10,11 @@ export default function ProductDetail() {
   const { id } = useParams()
   const [product, setProduct] = useState(null)
   const [error, setError] = useState('')
+  const [activeImg, setActiveImg] = useState(0)
   const { add, has } = useQuote()
 
   useEffect(() => {
+    setActiveImg(0)
     api
       .getProduct(id)
       .then((p) => {
@@ -38,6 +40,15 @@ export default function ProductDetail() {
   if (!product) return <div className="loading">Cargando…</div>
 
   const v = parseVehicle(product.name)
+  // Galería: usa el arreglo images; si el producto es viejo, cae a image_url.
+  const gallery = (
+    Array.isArray(product.images) && product.images.length
+      ? product.images
+      : product.image_url
+        ? [product.image_url]
+        : []
+  )
+  const mainImg = gallery[activeImg] || gallery[0]
   // Prioriza los campos explícitos cargados en el admin; si no están
   // cargados, cae de vuelta al año detectado por heurística en el nombre.
   const yearFrom = product.year_from ?? v.yearFrom
@@ -61,13 +72,30 @@ export default function ProductDetail() {
           ← Volver al catálogo
         </Link>
         <div className="detail-grid">
-          <div className="detail-media card">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} />
-            ) : (
-              <span className="detail-ph">🔧</span>
+          <div className="detail-gallery">
+            <div className="detail-media card">
+              {mainImg ? (
+                <img src={mainImg} alt={product.name} />
+              ) : (
+                <span className="detail-ph">🔧</span>
+              )}
+              {product.featured && <span className="ribbon">★ Destacado</span>}
+            </div>
+            {gallery.length > 1 && (
+              <div className="detail-thumbs">
+                {gallery.map((url, idx) => (
+                  <button
+                    key={url}
+                    type="button"
+                    className={`detail-thumb ${idx === activeImg ? 'active' : ''}`}
+                    onClick={() => setActiveImg(idx)}
+                    aria-label={`Ver foto ${idx + 1}`}
+                  >
+                    <img src={url} alt="" loading="lazy" />
+                  </button>
+                ))}
+              </div>
             )}
-            {product.featured && <span className="ribbon">★ Destacado</span>}
           </div>
           <div>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
