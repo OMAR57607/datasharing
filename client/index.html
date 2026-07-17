@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/jpeg" href="/logo.jpg" />
     <meta name="theme-color" content="#0d0d0f" />
+    <!-- Aplica el tema antes de pintar para evitar el parpadeo (FOUC). -->
+    <script>
+      (function () {
+        try {
+          var c = localStorage.getItem('nitro_theme') || 'system'
+          var sys = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+          document.documentElement.dataset.theme = c === 'system' ? sys : c
+        } catch (e) {}
+      })()
+    </script>
 
     <!-- SEO principal -->
     <title>Nitro Garage | Venta de Accesorios Automotrices</title>

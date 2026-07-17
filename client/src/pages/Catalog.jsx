@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
 import { parseVehicle, matchesYear } from '../lib/vehicles.js'
+import { observeReveal } from '../lib/anim.js'
 
 const SORTS = [
   { value: 'popular', label: 'Más solicitados' },
@@ -15,6 +16,8 @@ export default function Catalog() {
   const [params, setParams] = useSearchParams()
   const [all, setAll] = useState([])
   const [loading, setLoading] = useState(true)
+  const gridRef = useRef(null)
+  const revealed = useRef(false)
 
   // Estado de filtros (sincronizado con la URL para poder compartir enlaces).
   const search = params.get('q') || ''
@@ -31,6 +34,13 @@ export default function Catalog() {
       .catch(() => setAll([]))
       .finally(() => setLoading(false))
   }, [])
+
+  // Revelado animado una sola vez, al mostrar los primeros resultados.
+  useEffect(() => {
+    if (loading || revealed.current) return
+    revealed.current = true
+    return observeReveal(gridRef.current, '.product-card')
+  }, [loading])
 
   // Enriquecer cada producto con su vehículo parseado (memo).
   const enriched = useMemo(
@@ -173,7 +183,7 @@ export default function Catalog() {
                 </button>
               </div>
             ) : (
-              <div className="product-grid">
+              <div className="product-grid" ref={gridRef}>
                 {results.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}

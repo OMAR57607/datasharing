@@ -26,10 +26,38 @@
   --radius-sm: 8px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   --shadow-glow: 0 0 24px rgba(255, 90, 0, 0.25);
+  --hero-fade: rgba(13, 13, 15, 0);
+  --nav-bg: rgba(13, 13, 15, 0.82);
 
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: var(--text);
   background-color: var(--bg);
+}
+
+/* ===== Tema claro (Día) ===== */
+:root[data-theme='light'] {
+  --bg: #f3f4f7;
+  --bg-2: #ffffff;
+  --bg-3: #e9ebf0;
+  --surface: #ffffff;
+  --border: #dde1e8;
+
+  --orange: #e64f00;
+  --orange-2: #d24500;
+  --blue: #0077cc;
+  --blue-2: #0090e0;
+  --gold: #b57e00;
+
+  --text: #14161c;
+  --text-dim: #565d6a;
+  --text-faint: #8b93a1;
+
+  --shadow: 0 10px 28px rgba(20, 22, 28, 0.12);
+  --shadow-glow: 0 0 22px rgba(230, 79, 0, 0.18);
+  --hero-fade: rgba(243, 244, 247, 0);
+  --nav-bg: rgba(255, 255, 255, 0.82);
+
+  color-scheme: light;
 }
 
 * {

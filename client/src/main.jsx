@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './theme.css'
 import './app.css'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { ThemeProvider } from './context/ThemeContext.jsx'
 import PublicLayout from './components/PublicLayout.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Home from './pages/Home.jsx'
@@ -20,8 +21,9 @@ import AssignPhotos from './pages/admin/AssignPhotos.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
         <Routes>
           {/* Tienda pública */}
           <Route element={<PublicLayout />}>
@@ -48,8 +50,9 @@ createRoot(document.getElementById('root')).render(
             <Route path="fotos" element={<AssignPhotos />} />
             <Route path="precios" element={<BulkPrices />} />
           </Route>
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   </StrictMode>
 )
