@@ -951,6 +951,11 @@
 }
 .picker-item {
   position: relative;
+  /* Altura fija en píxeles (en vez de aspect-ratio, que no siempre se
+     respeta en elementos <button>): así cada celda tiene el mismo tamaño
+     garantizado, sin importar la forma de la foto. */
+  height: 150px;
+  width: 100%;
   padding: 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -960,9 +965,6 @@
      celda para que la foto (contenida, sin recortar) quede como un azulejo
      limpio en vez de una franja blanca sobre negro. */
   background: #fff;
-  /* Formato horizontal: la mayoría de las fotos son anchas, así el producto
-     llena la celda en vez de verse como una franja chiquita. */
-  aspect-ratio: 4 / 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -974,12 +976,12 @@
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
 }
 .picker-item img {
+  display: block;
   max-width: 100%;
   max-height: 100%;
   width: auto;
   height: auto;
   object-fit: contain;
-  display: block;
 }
 .picker-tag {
   position: absolute;
