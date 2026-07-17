@@ -12,32 +12,32 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="admin" style={{ gridTemplateRows: 'auto 1fr', gridTemplateColumns: '240px 1fr' }}>
-      <div style={{ gridColumn: '1 / -1' }}>
-        <ConfigBanner />
+    <>
+      <ConfigBanner />
+      <div className="admin">
+        <aside className="admin-side">
+          <Link to="/admin" className="brand">
+            <img src="/logo.jpg" alt="Nitro Garage" style={{ height: 38 }} />
+            <span className="brand-name">Admin</span>
+          </Link>
+          <NavLink to="/admin" end>
+            📊 Dashboard
+          </NavLink>
+          <NavLink to="/admin/productos">📦 Productos</NavLink>
+          <NavLink to="/admin/importar">📄 Importar PDF</NavLink>
+          <NavLink to="/admin/precios">💲 Carga de precios</NavLink>
+          <div className="spacer" />
+          <Link to="/" className="muted" style={{ fontSize: '0.85rem' }}>
+            ↗ Ver tienda
+          </Link>
+          <button className="btn btn-ghost btn-sm" onClick={onLogout}>
+            Salir ({user?.email})
+          </button>
+        </aside>
+        <main className="admin-main">
+          <Outlet />
+        </main>
       </div>
-      <aside className="admin-side">
-        <Link to="/admin" className="brand">
-          <img src="/logo.jpg" alt="Nitro Garage" style={{ height: 38 }} />
-          <span className="brand-name">Admin</span>
-        </Link>
-        <NavLink to="/admin" end>
-          📊 Dashboard
-        </NavLink>
-        <NavLink to="/admin/productos">📦 Productos</NavLink>
-        <NavLink to="/admin/importar">📄 Importar PDF</NavLink>
-        <NavLink to="/admin/precios">💲 Carga de precios</NavLink>
-        <div className="spacer" />
-        <Link to="/" className="muted" style={{ fontSize: '0.85rem' }}>
-          ↗ Ver tienda
-        </Link>
-        <button className="btn btn-ghost btn-sm" onClick={onLogout}>
-          Salir ({user?.email})
-        </button>
-      </aside>
-      <main className="admin-main">
-        <Outlet />
-      </main>
-    </div>
+    </>
   )
 }

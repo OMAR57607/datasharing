@@ -41,16 +41,14 @@ export default function ImportPdf() {
 
   async function loadFromRepo(catalog) {
     setError('')
+    setResult(null)
     setLoadingRepo(true)
     try {
-      const res = await fetch(catalog.url)
-      if (!res.ok) throw new Error('No se pudo leer el catálogo del repositorio')
-      const blob = await res.blob()
-      const repoFile = new File([blob], catalog.url.split('/').pop(), {
-        type: 'application/pdf',
-      })
-      setFile(repoFile)
-      await processFile(repoFile)
+      // La Function descarga el PDF por su cuenta (no lo reenviamos: así
+      // evitamos el límite de tamaño del cuerpo de las Vercel Functions).
+      const data = await api.importPdfFromUrl(catalog.url)
+      setPreview(data)
+      setRows(data.products.map((p) => ({ ...p, include: true, image_url: null })))
     } catch (err) {
       setError(err.message)
     } finally {

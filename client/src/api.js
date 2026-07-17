@@ -125,6 +125,20 @@ export const api = {
     return data
   },
 
+  // Importa un PDF ya alojado en el sitio (evita el límite de tamaño de
+  // subida de las Functions: la Function lo descarga por su cuenta).
+  async importPdfFromUrl(url) {
+    const absolute = url.startsWith('http') ? url : window.location.origin + url
+    const res = await fetch('/api/import', {
+      method: 'POST',
+      headers: { ...(await authHeader()), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: absolute }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'Error al importar')
+    return data
+  },
+
   async confirmImport(products) {
     // Inserta los productos elegidos directamente en Supabase.
     // Omite los que tengan un SKU ya existente.
