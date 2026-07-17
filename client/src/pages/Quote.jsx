@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useQuote } from '../context/QuoteContext.jsx'
 import { formatPrice } from '../components/ProductCard.jsx'
 import { api } from '../api.js'
-import { WHATSAPP, STORE_NAME, STORE_EMAIL, WHATSAPP_DISPLAY } from '../lib/config.js'
+import { downloadQuotePdf } from '../lib/pdf.js'
+import { WHATSAPP, STORE_NAME } from '../lib/config.js'
 
 const IVA_RATE = 0.16
 
@@ -62,9 +63,13 @@ export default function Quote() {
     window.open(url, '_blank', 'noopener')
   }
 
-  function onPdf() {
+  async function onPdf() {
     if (!validate()) return
-    window.print()
+    try {
+      await downloadQuotePdf({ form, items, subtotal, iva, total })
+    } catch (e) {
+      setError('No se pudo generar el PDF: ' + e.message)
+    }
   }
 
   async function onSave() {
@@ -228,80 +233,6 @@ export default function Quote() {
           </button>
         </div>
       </div>
-
-      {/* Documento imprimible (solo visible al imprimir/descargar PDF) */}
-      <QuoteDocument form={form} items={items} subtotal={subtotal} iva={iva} total={total} />
     </section>
-  )
-}
-
-function QuoteDocument({ form, items, subtotal, iva, total }) {
-  const now = new Date()
-  return (
-    <div className="print-doc" aria-hidden="true">
-      <div className="print-head">
-        <div>
-          <img src="/logo.jpg" alt={STORE_NAME} className="print-logo" />
-          <strong>{STORE_NAME}</strong>
-          <div className="print-muted">Venta de accesorios automotrices · Puebla, México</div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div className="print-title">COTIZACIÓN</div>
-          <div className="print-muted">
-            {now.toLocaleDateString('es-MX')} · {now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
-          </div>
-        </div>
-      </div>
-      <hr />
-      <div className="print-cliente">
-        <div><strong>Cliente:</strong> {form.nombre || '—'}</div>
-        <div><strong>Teléfono:</strong> {form.telefono || '—'}</div>
-        {form.email && <div><strong>Correo:</strong> {form.email}</div>}
-        {form.vehiculo && <div><strong>Vehículo:</strong> {form.vehiculo}</div>}
-      </div>
-      <table className="print-table">
-        <thead>
-          <tr>
-            <th>Accesorio</th>
-            <th>Cant.</th>
-            <th>Unitario</th>
-            <th>Importe</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((i) => (
-            <tr key={i.id}>
-              <td>
-                {i.name}
-                {i.sku ? <div className="print-muted">Nº parte {i.sku}</div> : null}
-              </td>
-              <td>{i.qty}</td>
-              <td>{i.price != null ? formatPrice(i.price) : 'A consultar'}</td>
-              <td>{i.price != null ? formatPrice(i.price * i.qty) : '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="print-totals">
-        <div><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
-        <div><span>IVA (16%)</span><span>{formatPrice(iva)}</span></div>
-        <div className="grand"><span>Total</span><span>{formatPrice(total)}</span></div>
-        <div className="print-muted">Precios en MXN, IVA incluido.</div>
-      </div>
-      {form.notas && (
-        <p className="print-muted"><strong>Notas:</strong> {form.notas}</p>
-      )}
-      <div className="print-legal">
-        <strong>Información y términos de la cotización:</strong>
-        <ul>
-          <li><strong>Vigencia:</strong> válida por 15 días naturales, sujeta a disponibilidad de inventario.</li>
-          <li><strong>Precios e impuestos:</strong> en Moneda Nacional (MXN) e incluyen IVA (16%).</li>
-          <li><strong>Carácter informativo:</strong> este documento es una estimación presupuestaria y no constituye factura ni obligación de compra.</li>
-        </ul>
-      </div>
-      <div className="print-foot print-muted">
-        {STORE_NAME} · {WHATSAPP_DISPLAY} · {STORE_EMAIL}
-      </div>
-    </div>
   )
 }
