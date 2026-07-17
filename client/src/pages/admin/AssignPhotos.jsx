@@ -49,6 +49,20 @@ export default function AssignPhotos() {
     }
   }
 
+  async function uploadFromDevice(product, file) {
+    setSavingId(product.id)
+    setError('')
+    try {
+      const { url } = await api.uploadImage(file)
+      const updated = await api.updateProduct(product.id, { image_url: url })
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)))
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   return (
     <>
       <div className="admin-head">
@@ -101,13 +115,35 @@ export default function AssignPhotos() {
               <div className="assign-body">
                 <strong title={p.name}>{p.name}</strong>
                 {p.sku && <span className="product-sku">{p.sku}</span>}
-                <button
-                  className="btn btn-ice btn-sm"
-                  disabled={savingId === p.id}
-                  onClick={() => setPickerFor(p)}
-                >
-                  {p.image_url ? '🖼️ Cambiar foto' : '🖼️ Elegir foto'}
-                </button>
+                <div className="row assign-actions" style={{ gap: 6 }}>
+                  <button
+                    className="btn btn-ice btn-sm"
+                    disabled={savingId === p.id}
+                    onClick={() => setPickerFor(p)}
+                  >
+                    🖼️ {p.image_url ? 'Cambiar' : 'Catálogo'}
+                  </button>
+                  <label
+                    className="btn btn-ghost btn-sm"
+                    style={{
+                      cursor: savingId === p.id ? 'default' : 'pointer',
+                      opacity: savingId === p.id ? 0.6 : 1,
+                    }}
+                  >
+                    📁 Subir
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      style={{ display: 'none' }}
+                      disabled={savingId === p.id}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        e.target.value = ''
+                        if (file) uploadFromDevice(p, file)
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
           ))}

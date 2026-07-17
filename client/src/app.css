@@ -902,8 +902,14 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.assign-body button {
+.assign-actions {
   margin-top: auto;
+  flex-wrap: wrap;
+}
+.assign-actions .btn {
+  flex: 1;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 /* ===== Selector de imágenes (modal galería) ===== */
