@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Redirige las llamadas /api al backend Express en desarrollo.
-      '/api': 'http://localhost:4000',
+      // En dev, las funciones /api corren con `vercel dev` (puerto 3000).
+      '/api': 'http://localhost:3000',
     },
   },
 })

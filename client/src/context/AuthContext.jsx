@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { api, getToken, setToken } from '../api.js'
+import { supabase } from '../lib/supabase.js'
 
 const AuthContext = createContext(null)
 
@@ -8,27 +8,24 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = getToken()
-    if (!token) {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null)
       setLoading(false)
-      return
-    }
-    api
-      .me()
-      .then((data) => setUser(data.user))
-      .catch(() => setToken(null))
-      .finally(() => setLoading(false))
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => sub.subscription.unsubscribe()
   }, [])
 
-  async function login(username, password) {
-    const data = await api.login(username, password)
-    setToken(data.token)
-    setUser(data.user)
+  async function login(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw new Error(error.message)
     return data.user
   }
 
-  function logout() {
-    setToken(null)
+  async function logout() {
+    await supabase.auth.signOut()
     setUser(null)
   }
 

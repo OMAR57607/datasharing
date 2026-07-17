@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx'
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,7 +15,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      await login(username, password)
+      await login(email, password)
       navigate('/admin')
     } catch (err) {
       setError(err.message)
@@ -44,10 +44,11 @@ export default function Login() {
         )}
 
         <div className="field">
-          <label>Usuario</label>
+          <label>Email</label>
           <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             autoFocus
             required
           />

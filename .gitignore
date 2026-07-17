@@ -12,11 +12,11 @@ dist
 dist-ssr
 *.local
 
-# Base de datos SQLite y uploads del servidor
-*.db
-*.db-wal
-*.db-shm
-server/uploads/
+# Variables de entorno (credenciales) y Vercel
+.env
+.env.*
+!.env.example
+.vercel
 
 # Editor directories and files
 .vscode/*

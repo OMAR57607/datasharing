@@ -20,6 +20,22 @@ export default function ProductEdit() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+
+  async function onImageFile(e) {
+    const f = e.target.files?.[0]
+    if (!f) return
+    setError('')
+    setUploading(true)
+    try {
+      const { url } = await api.uploadImage(f)
+      setForm((prev) => ({ ...prev, image_url: url }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
 
   useEffect(() => {
     if (isNew) return
@@ -118,12 +134,23 @@ export default function ProductEdit() {
             />
           </div>
           <div className="field">
-            <label>URL de imagen</label>
+            <label>Imagen del producto</label>
             <input
               value={form.image_url}
               onChange={(e) => set('image_url', e.target.value)}
-              placeholder="https://…"
+              placeholder="URL de Cloudinary o subí un archivo ↓"
             />
+            <div className="row" style={{ gap: 10, marginTop: 6, alignItems: 'center' }}>
+              <input type="file" accept="image/*" onChange={onImageFile} disabled={uploading} />
+              {uploading && <span className="muted">Subiendo…</span>}
+              {form.image_url && (
+                <img
+                  src={form.image_url}
+                  alt=""
+                  style={{ height: 40, width: 40, objectFit: 'cover', borderRadius: 6 }}
+                />
+              )}
+            </div>
           </div>
         </div>
 

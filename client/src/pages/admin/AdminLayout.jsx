@@ -28,7 +28,7 @@ export default function AdminLayout() {
           ↗ Ver tienda
         </Link>
         <button className="btn btn-ghost btn-sm" onClick={onLogout}>
-          Salir ({user?.username})
+          Salir ({user?.email})
         </button>
       </aside>
       <main className="admin-main">

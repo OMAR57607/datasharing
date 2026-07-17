@@ -3,11 +3,13 @@ import { api } from '../../api.js'
 
 export default function ImportPdf() {
   const [file, setFile] = useState(null)
-  const [preview, setPreview] = useState(null) // { count, pages, products }
+  const [preview, setPreview] = useState(null) // { count, pages, products, pageImages }
   const [rows, setRows] = useState([])
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  const pageImages = preview?.pageImages || []
 
   async function onUpload(e) {
     e.preventDefault()
@@ -18,7 +20,7 @@ export default function ImportPdf() {
     try {
       const data = await api.importPdf(file)
       setPreview(data)
-      setRows(data.products.map((p) => ({ ...p, include: true })))
+      setRows(data.products.map((p) => ({ ...p, include: true, image_url: null })))
     } catch (err) {
       setError(err.message)
     } finally {
@@ -27,9 +29,7 @@ export default function ImportPdf() {
   }
 
   function updateRow(i, key, value) {
-    setRows((prev) =>
-      prev.map((r, idx) => (idx === i ? { ...r, [key]: value } : r))
-    )
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [key]: value } : r)))
   }
 
   async function onConfirm() {
@@ -73,8 +73,8 @@ export default function ImportPdf() {
       {!preview && (
         <form className="card" style={{ padding: '1.5rem', maxWidth: 560 }} onSubmit={onUpload}>
           <p className="muted" style={{ marginTop: 0 }}>
-            Subí un catálogo en PDF. El sistema extraerá los productos (sin
-            precio) para que los revises antes de guardarlos.
+            Subí un catálogo en PDF. Se extraen los productos (sin precio) y cada
+            página se guarda como imagen en Cloudinary para que puedas asignarla.
           </p>
           <div className="field">
             <label>Archivo PDF</label>
@@ -94,9 +94,11 @@ export default function ImportPdf() {
         <div>
           <div className="admin-head">
             <p className="muted">
-              {preview.filename} — {preview.pages} página(s),{' '}
-              <strong>{rows.length}</strong> candidato(s) detectado(s). Revisá y
-              editá antes de importar.
+              {preview.filename} — {preview.pages} pág.,{' '}
+              <strong>{rows.length}</strong> producto(s) detectado(s).
+              {pageImages.length > 0
+                ? ` ${pageImages.length} imagen(es) de página disponibles.`
+                : ' (Sin imágenes: configurá Cloudinary para habilitarlas.)'}
             </p>
             <div className="row">
               <button
@@ -109,7 +111,7 @@ export default function ImportPdf() {
                 Cancelar
               </button>
               <button className="btn btn-primary btn-sm" onClick={onConfirm} disabled={loading}>
-                {loading ? 'Importando…' : `Importar seleccionados`}
+                {loading ? 'Importando…' : 'Importar seleccionados'}
               </button>
             </div>
           </div>
@@ -121,7 +123,8 @@ export default function ImportPdf() {
                   <th style={{ width: 40 }}>✓</th>
                   <th style={{ width: 140 }}>SKU</th>
                   <th>Nombre</th>
-                  <th style={{ width: 160 }}>Categoría</th>
+                  <th style={{ width: 150 }}>Categoría</th>
+                  {pageImages.length > 0 && <th style={{ width: 130 }}>Imagen</th>}
                 </tr>
               </thead>
               <tbody>
@@ -156,6 +159,31 @@ export default function ImportPdf() {
                         onChange={(e) => updateRow(i, 'category', e.target.value)}
                       />
                     </td>
+                    {pageImages.length > 0 && (
+                      <td>
+                        <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+                          <select
+                            style={{ padding: '0.35rem 0.4rem' }}
+                            value={r.image_url || ''}
+                            onChange={(e) => updateRow(i, 'image_url', e.target.value || null)}
+                          >
+                            <option value="">—</option>
+                            {pageImages.map((pi) => (
+                              <option key={pi.page} value={pi.url}>
+                                Pág. {pi.page}
+                              </option>
+                            ))}
+                          </select>
+                          {r.image_url && (
+                            <img
+                              src={r.image_url}
+                              alt=""
+                              style={{ height: 34, width: 34, objectFit: 'cover', borderRadius: 4 }}
+                            />
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
