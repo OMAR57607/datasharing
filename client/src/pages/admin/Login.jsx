@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import ConfigBanner from '../../components/ConfigBanner.jsx'
+import Turnstile, { TURNSTILE_ENABLED } from '../../components/Turnstile.jsx'
 
 export default function Login() {
   const { login } = useAuth()
@@ -10,16 +11,28 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+  const turnstileRef = useRef(null)
+
+  // Estable: evita re-renderizar el widget en cada render.
+  const onToken = useCallback((t) => setCaptchaToken(t), [])
 
   async function onSubmit(e) {
     e.preventDefault()
+    if (TURNSTILE_ENABLED && !captchaToken) {
+      setError('Completa la verificación de seguridad para continuar.')
+      return
+    }
     setError('')
     setLoading(true)
     try {
-      await login(email, password)
+      await login(email, password, captchaToken)
       navigate('/admin')
     } catch (err) {
       setError(err.message)
+      // El token es de un solo uso: pide uno nuevo para el siguiente intento.
+      setCaptchaToken('')
+      turnstileRef.current?.reset()
     } finally {
       setLoading(false)
     }
@@ -40,7 +53,7 @@ export default function Login() {
           Panel de administración
         </h2>
         <p className="muted" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          Ingresá tus credenciales
+          Ingresa tus credenciales
         </p>
 
         {error && (
@@ -68,6 +81,8 @@ export default function Login() {
             required
           />
         </div>
+        <Turnstile ref={turnstileRef} onToken={onToken} />
+
         <button
           type="submit"
           className="btn btn-primary"

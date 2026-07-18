@@ -19,8 +19,12 @@ export function AuthProvider({ children }) {
     return () => sub.subscription.unsubscribe()
   }, [])
 
-  async function login(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  async function login(email, password, captchaToken) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      ...(captchaToken ? { options: { captchaToken } } : {}),
+    })
     if (error) throw new Error(error.message)
     return data.user
   }
