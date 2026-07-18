@@ -4,6 +4,7 @@ import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
 import { makeOf } from '../lib/vehicles.js'
 import HeroFX from '../components/HeroFX.jsx'
+import { useSeo } from '../lib/useSeo.js'
 import { animate, stagger, observeReveal, reducedMotion } from '../lib/anim.js'
 
 const CAT_ICON = {
@@ -25,6 +26,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const heroRef = useRef(null)
   const gridRef = useRef(null)
+
+  useSeo({
+    description:
+      'Accesorios off-road y 4x4 para pickups y camionetas: roll bars, racks de batea, bumpers, tumbaburros, tapas y casetas, estribos, tool box y bedliners. Busca por marca, modelo y año. Envíos a todo México.',
+  })
 
   useEffect(() => {
     api

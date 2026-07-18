@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/jpeg" href="/logo.jpg" />
-    <meta name="theme-color" content="#0d0d0f" />
+    <link rel="apple-touch-icon" href="/logo.jpg" />
+    <meta name="theme-color" content="#0d0d0f" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f3f4f7" media="(prefers-color-scheme: light)" />
     <!-- Aplica el tema antes de pintar para evitar el parpadeo (FOUC). -->
     <script>
       (function () {
@@ -17,54 +19,83 @@
     </script>
 
     <!-- SEO principal -->
-    <title>Nitro Garage | Venta de Accesorios Automotrices</title>
+    <title>Nitro Garage | Accesorios Off-Road y 4x4 para Pickups</title>
     <meta
       name="description"
-      content="Nitro Garage — tienda de accesorios automotrices. Iluminación LED, interiores, tecnología y equipamiento para tu vehículo. Calidad y estilo para tu auto."
+      content="Nitro Garage — accesorios off-road y 4x4 para pickups y camionetas: roll bars, racks de batea, bumpers, tumbaburros, tapas y casetas, estribos, tool box y bedliners. Busca por marca, modelo y año. Envíos a todo México."
     />
     <meta
       name="keywords"
-      content="accesorios automotrices, accesorios para autos, tapetes, luces LED, fundas de volante, cargadores, tuning, Nitro Garage"
+      content="accesorios off-road, accesorios 4x4, accesorios para pickup, roll bar, racks de batea, bumpers, tumbaburros, tapa de batea, caseta, estribos, tool box, bedliner, Toyota Hilux, Ford Ranger, Nissan Frontier, Nitro Garage"
     />
     <meta name="author" content="Nitro Garage" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="canonical" href="https://nitrogarage.com/" />
 
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Nitro Garage" />
-    <meta property="og:title" content="Nitro Garage | Venta de Accesorios Automotrices" />
+    <meta property="og:title" content="Nitro Garage | Accesorios Off-Road y 4x4 para Pickups" />
     <meta
       property="og:description"
-      content="Accesorios automotrices con estilo: iluminación LED, interiores, tecnología y más para tu vehículo."
+      content="Accesorios off-road y 4x4 para pickups: roll bars, racks, bumpers, tapas, estribos y más. Busca por marca, modelo y año."
     />
-    <meta property="og:image" content="/logo.jpg" />
+    <meta property="og:image" content="https://nitrogarage.com/logo.jpg" />
+    <meta property="og:image:width" content="1600" />
+    <meta property="og:image:height" content="870" />
+    <meta property="og:image:alt" content="Nitro Garage — accesorios off-road y 4x4" />
     <meta property="og:url" content="https://nitrogarage.com/" />
-    <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale" content="es_MX" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Nitro Garage | Venta de Accesorios Automotrices" />
+    <meta name="twitter:title" content="Nitro Garage | Accesorios Off-Road y 4x4 para Pickups" />
     <meta
       name="twitter:description"
-      content="Accesorios automotrices con estilo para tu vehículo."
+      content="Accesorios off-road y 4x4 para pickups: roll bars, racks, bumpers, tapas, estribos y más."
     />
-    <meta name="twitter:image" content="/logo.jpg" />
+    <meta name="twitter:image" content="https://nitrogarage.com/logo.jpg" />
+    <meta name="twitter:image:alt" content="Nitro Garage — accesorios off-road y 4x4" />
 
     <!-- Datos estructurados (JSON-LD) para buscadores -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Store",
-        "name": "Nitro Garage",
-        "description": "Venta de accesorios automotrices.",
-        "image": "/logo.jpg",
-        "url": "https://nitrogarage.com/",
-        "priceRange": "$$",
-        "makesOffer": {
-          "@type": "OfferCatalog",
-          "name": "Accesorios automotrices"
-        }
+        "@graph": [
+          {
+            "@type": "Store",
+            "@id": "https://nitrogarage.com/#store",
+            "name": "Nitro Garage",
+            "description": "Venta de accesorios off-road y 4x4 para pickups y camionetas: roll bars, racks, bumpers, tapas, estribos, tool box y bedliners.",
+            "image": "https://nitrogarage.com/logo.jpg",
+            "logo": "https://nitrogarage.com/logo.jpg",
+            "url": "https://nitrogarage.com/",
+            "telephone": "+52 238 290 0385",
+            "email": "contacto@nitrogarage.com",
+            "priceRange": "$$",
+            "areaServed": { "@type": "Country", "name": "México" },
+            "makesOffer": {
+              "@type": "OfferCatalog",
+              "name": "Accesorios off-road y 4x4"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://nitrogarage.com/#website",
+            "url": "https://nitrogarage.com/",
+            "name": "Nitro Garage",
+            "inLanguage": "es-MX",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://nitrogarage.com/catalogo?q={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
       }
     </script>
   </head>

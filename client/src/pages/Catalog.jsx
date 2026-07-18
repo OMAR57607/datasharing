@@ -4,6 +4,7 @@ import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
 import Pagination from '../components/Pagination.jsx'
 import { vehicleOf, matchesYear } from '../lib/vehicles.js'
+import { useSeo } from '../lib/useSeo.js'
 import { observeReveal } from '../lib/anim.js'
 
 const PAGE_SIZE = 24
@@ -28,6 +29,22 @@ export default function Catalog() {
   const make = params.get('make') || ''
   const year = params.get('year') || ''
   const sort = params.get('sort') || 'popular'
+
+  // SEO dinámico según los filtros activos.
+  const seoTitle =
+    make && category
+      ? `${category} para ${make}${year ? ` ${year}` : ''}`
+      : make
+        ? `Accesorios para ${make}${year ? ` ${year}` : ''}`
+        : category
+          ? `${category} — Catálogo`
+          : 'Catálogo de accesorios off-road y 4x4'
+  useSeo({
+    title: seoTitle,
+    description: `Encuentra ${(category || 'accesorios off-road y 4x4').toLowerCase()}${
+      make ? ` para ${make}` : ''
+    } en Nitro Garage. Roll bars, racks, bumpers, tapas, estribos y más. Busca por marca, modelo y año.`,
+  })
 
   useEffect(() => {
     setLoading(true)

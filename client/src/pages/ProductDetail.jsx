@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api.js'
 import { formatPrice } from '../components/ProductCard.jsx'
 import { parseVehicle } from '../lib/vehicles.js'
+import { useSeo } from '../lib/useSeo.js'
 import { useQuote } from '../context/QuoteContext.jsx'
 import { WHATSAPP } from '../lib/config.js'
 
@@ -23,6 +24,54 @@ export default function ProductDetail() {
       })
       .catch(() => setError('Producto no encontrado'))
   }, [id])
+
+  // SEO por producto: título, descripción, imagen y datos estructurados.
+  const seoDescription = useMemo(() => {
+    if (!product) return undefined
+    const base =
+      product.description ||
+      `${product.name} — accesorio ${product.category ? product.category + ' ' : ''}para tu vehículo. Consulta precio y disponibilidad en Nitro Garage.`
+    return base.slice(0, 300)
+  }, [product])
+
+  const seoJsonLd = useMemo(() => {
+    if (!product) return null
+    const images = Array.isArray(product.images) && product.images.length
+      ? product.images
+      : product.image_url
+        ? [product.image_url]
+        : []
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      ...(images.length ? { image: images } : {}),
+      ...(product.sku ? { sku: product.sku } : {}),
+      ...(seoDescription ? { description: seoDescription } : {}),
+      brand: {
+        '@type': 'Brand',
+        name: product.brand || parseVehicle(product.name).make || 'Nitro Garage',
+      },
+      ...(product.current_price != null
+        ? {
+            offers: {
+              '@type': 'Offer',
+              price: product.current_price,
+              priceCurrency: 'MXN',
+              availability: 'https://schema.org/InStock',
+              url: typeof window !== 'undefined' ? window.location.href : undefined,
+            },
+          }
+        : {}),
+    }
+  }, [product, seoDescription])
+
+  useSeo({
+    title: product?.name,
+    description: seoDescription,
+    image: product?.image_url,
+    jsonLd: seoJsonLd,
+  })
 
   if (error) {
     return (
