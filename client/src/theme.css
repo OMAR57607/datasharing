@@ -326,6 +326,37 @@ select:focus {
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
 }
+
+/* Campos obligatorios inválidos: borde y brillo rojo (con pulso de atención) */
+.input-error,
+.input-error:focus {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 3px rgba(226, 35, 26, 0.25);
+  animation: fieldGlow 0.9s ease-in-out 2;
+}
+@keyframes fieldGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(226, 35, 26, 0.22);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(226, 35, 26, 0.5);
+  }
+}
+.field-error {
+  color: #ff6b63;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 0.15rem;
+}
+/* Aviso de error pegado a los botones (visible al hacer clic) */
+.quote-error {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.8rem;
+  animation: fieldGlow 0.9s ease-in-out 2;
+}
 table {
   width: 100%;
   border-collapse: collapse;

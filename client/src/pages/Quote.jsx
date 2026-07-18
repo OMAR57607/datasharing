@@ -15,6 +15,10 @@ export default function Quote() {
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [showErrors, setShowErrors] = useState(false)
+
+  const nombreErr = showErrors && !form.nombre.trim()
+  const telErr = showErrors && !form.telefono.trim()
 
   const set = (k, v) => setForm((prev) => ({ ...prev, [k]: v }))
 
@@ -26,13 +30,15 @@ export default function Quote() {
 
   function validate() {
     if (!form.nombre.trim() || !form.telefono.trim()) {
-      setError('El nombre y el teléfono son obligatorios.')
+      setShowErrors(true)
+      setError('Completa los campos marcados en rojo (nombre y teléfono) para continuar.')
       return false
     }
     if (items.length === 0) {
       setError('Tu lista está vacía.')
       return false
     }
+    setShowErrors(false)
     setError('')
     return true
   }
@@ -124,7 +130,6 @@ export default function Quote() {
           precios incluyen IVA.
         </p>
 
-        {error && <div className="error-box" style={{ margin: '1rem 0' }}>{error}</div>}
         {saved && (
           <div className="success-box" style={{ margin: '1rem 0' }}>
             <Icon name="check-circle" size={15} /> Cotización guardada. Nuestro equipo te contactará.
@@ -192,17 +197,25 @@ export default function Quote() {
           <div className="row-2">
             <div className="field">
               <label>Nombre *</label>
-              <input value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
+              <input
+                className={nombreErr ? 'input-error' : ''}
+                value={form.nombre}
+                onChange={(e) => set('nombre', e.target.value)}
+                required
+              />
+              {nombreErr && <span className="field-error">Requerido</span>}
             </div>
             <div className="field">
               <label>Teléfono *</label>
               <input
                 type="tel"
+                className={telErr ? 'input-error' : ''}
                 value={form.telefono}
                 onChange={(e) => set('telefono', e.target.value)}
                 placeholder="Ej. 238 290 0385"
                 required
               />
+              {telErr && <span className="field-error">Requerido</span>}
             </div>
           </div>
           <div className="row-2">
@@ -222,6 +235,11 @@ export default function Quote() {
         </div>
 
         {/* Acciones */}
+        {error && (
+          <div className="error-box quote-error">
+            <Icon name="alert" size={16} /> {error}
+          </div>
+        )}
         <div className="quote-actions-bar">
           <button className="btn btn-whatsapp" onClick={onWhatsApp}>
             <Icon name="whatsapp" size={18} /> Enviar por WhatsApp
