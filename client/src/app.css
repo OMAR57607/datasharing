@@ -65,6 +65,7 @@
 .theme-opt {
   border: none;
   background: transparent;
+  color: var(--text);
   cursor: pointer;
   width: 30px;
   height: 26px;

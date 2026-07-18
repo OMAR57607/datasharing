@@ -4,9 +4,9 @@ import { api } from '../api.js'
 import { formatPrice } from '../components/ProductCard.jsx'
 import { parseVehicle } from '../lib/vehicles.js'
 import { useSeo } from '../lib/useSeo.js'
+import { productWaHref } from '../lib/whatsapp.js'
 import Icon from '../components/Icon.jsx'
 import { useQuote } from '../context/QuoteContext.jsx'
-import { WHATSAPP } from '../lib/config.js'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -209,9 +209,7 @@ export default function ProductDetail() {
                 {has(product.id) ? 'En mi lista' : 'Agregar a mi lista'}
               </button>
               <a
-                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-                  `Hola, me interesa: ${product.name}${product.sku ? ' (' + product.sku + ')' : ''}`
-                )}`}
+                href={productWaHref(product)}
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-whatsapp"

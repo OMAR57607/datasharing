@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom'
 import { useQuote } from '../context/QuoteContext.jsx'
 import { makeOf } from '../lib/vehicles.js'
 import { useTilt } from '../lib/useTilt.js'
+import { productWaHref } from '../lib/whatsapp.js'
 import Icon from './Icon.jsx'
-import { WHATSAPP } from '../lib/config.js'
 
 export function formatPrice(value) {
   if (value == null) return null
@@ -21,9 +21,7 @@ export default function ProductCard({ product }) {
   const make = makeOf(product)
   const photoCount = Array.isArray(product.images) ? product.images.length : 0
   const tilt = useTilt()
-  const waHref = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-    `Hola, me interesa: ${product.name}${product.sku ? ' (' + product.sku + ')' : ''}`
-  )}`
+  const waHref = productWaHref(product)
 
   return (
     <div
