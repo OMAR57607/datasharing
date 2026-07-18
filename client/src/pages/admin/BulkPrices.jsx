@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api } from '../../api.js'
+import Icon from '../../components/Icon.jsx'
 
 // Carga masiva de precios pegando líneas "SKU precio" o "SKU,precio".
 export default function BulkPrices() {
@@ -51,7 +52,7 @@ export default function BulkPrices() {
       {error && <div className="error-box" style={{ marginBottom: 16 }}>{error}</div>}
       {result && (
         <div className="success-box" style={{ marginBottom: 16 }}>
-          ✓ {result.updated.length} precio(s) actualizado(s).
+          <Icon name="check-circle" size={15} /> {result.updated.length} precio(s) actualizado(s).
           {result.notFound.length > 0 &&
             ` No encontrados: ${result.notFound.join(', ')}.`}
           {result.invalid.length > 0 &&

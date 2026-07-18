@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../api.js'
 import ImagePicker from '../../components/ImagePicker.jsx'
+import Icon from '../../components/Icon.jsx'
 
 export default function AssignPhotos() {
   const [products, setProducts] = useState([])
@@ -108,7 +109,7 @@ export default function AssignPhotos() {
       ) : shown.length === 0 ? (
         <p className="muted">
           {onlyMissing
-            ? '¡Todos los productos (del filtro) ya tienen foto! 🎉'
+            ? '¡Todos los productos (del filtro) ya tienen foto!'
             : 'No se encontraron productos.'}
         </p>
       ) : (
@@ -119,10 +120,12 @@ export default function AssignPhotos() {
                 {p.image_url ? (
                   <img src={p.image_url} alt="" loading="lazy" />
                 ) : (
-                  <span>🔧</span>
+                  <Icon name="tool" size={30} />
                 )}
                 {justDone.has(p.id) && savingId !== p.id && (
-                  <span className="assign-done-tag">✓ Editado</span>
+                  <span className="assign-done-tag">
+                    <Icon name="check" size={12} /> Editado
+                  </span>
                 )}
                 {savingId === p.id && <div className="assign-saving">En edición…</div>}
               </div>
@@ -135,7 +138,7 @@ export default function AssignPhotos() {
                     disabled={savingId === p.id}
                     onClick={() => setPickerFor(p)}
                   >
-                    🖼️ {p.image_url ? 'Cambiar' : 'Catálogo'}
+                    <Icon name="image" size={15} /> {p.image_url ? 'Cambiar' : 'Catálogo'}
                   </button>
                   <label
                     className="btn btn-ghost btn-sm"
@@ -144,7 +147,7 @@ export default function AssignPhotos() {
                       opacity: savingId === p.id ? 0.6 : 1,
                     }}
                   >
-                    📁 Subir
+                    <Icon name="upload" size={15} /> Subir
                     <input
                       type="file"
                       accept="image/png,image/jpeg"

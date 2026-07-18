@@ -2,6 +2,7 @@ import { NavLink, Link, Outlet } from 'react-router-dom'
 import ConfigBanner from './ConfigBanner.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 import CartFAB from './CartFAB.jsx'
+import Icon from './Icon.jsx'
 import { useQuote } from '../context/QuoteContext.jsx'
 
 export default function PublicLayout() {
@@ -21,7 +22,7 @@ export default function PublicLayout() {
             </NavLink>
             <NavLink to="/catalogo">Catálogo</NavLink>
             <NavLink to="/cotizacion" className="cart-link" title="Mi lista">
-              <span aria-hidden="true">🧾</span>
+              <Icon name="receipt" size={17} />
               <span className="cart-label">Mi lista</span>
               {count > 0 && <span className="cart-badge">{count}</span>}
             </NavLink>

@@ -1,9 +1,10 @@
 import { useTheme } from '../context/ThemeContext.jsx'
+import Icon from './Icon.jsx'
 
 const OPTIONS = [
-  { value: 'light', icon: '☀️', label: 'Día' },
-  { value: 'dark', icon: '🌙', label: 'Noche' },
-  { value: 'system', icon: '💻', label: 'Sistema' },
+  { value: 'light', icon: 'sun', label: 'Día' },
+  { value: 'dark', icon: 'moon', label: 'Noche' },
+  { value: 'system', icon: 'monitor', label: 'Sistema' },
 ]
 
 export default function ThemeToggle() {
@@ -18,7 +19,7 @@ export default function ThemeToggle() {
           title={o.label}
           aria-pressed={choice === o.value}
         >
-          <span aria-hidden="true">{o.icon}</span>
+          <Icon name={o.icon} size={16} />
         </button>
       ))}
     </div>

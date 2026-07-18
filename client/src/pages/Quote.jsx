@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuote } from '../context/QuoteContext.jsx'
 import { formatPrice } from '../components/ProductCard.jsx'
+import Icon from '../components/Icon.jsx'
 import { api } from '../api.js'
 import { downloadQuotePdf } from '../lib/pdf.js'
 import { WHATSAPP, STORE_NAME } from '../lib/config.js'
@@ -112,8 +113,8 @@ export default function Quote() {
   return (
     <section className="section">
       <div className="container quote-page">
-        <Link to="/catalogo" className="muted">
-          ← Seguir agregando
+        <Link to="/catalogo" className="muted link-icon">
+          <Icon name="arrow-left" size={16} /> Seguir agregando
         </Link>
         <h1 className="display" style={{ marginTop: '0.6rem' }}>
           Tu <span className="text-grad">cotización</span>
@@ -126,7 +127,7 @@ export default function Quote() {
         {error && <div className="error-box" style={{ margin: '1rem 0' }}>{error}</div>}
         {saved && (
           <div className="success-box" style={{ margin: '1rem 0' }}>
-            ✓ Cotización guardada. Nuestro equipo te contactará.
+            <Icon name="check-circle" size={15} /> Cotización guardada. Nuestro equipo te contactará.
           </div>
         )}
 
@@ -142,7 +143,7 @@ export default function Quote() {
             {items.map((i) => (
               <div key={i.id} className="quote-item">
                 <div className="quote-thumb">
-                  {i.image_url ? <img src={i.image_url} alt="" /> : <span>🔧</span>}
+                  {i.image_url ? <img src={i.image_url} alt="" /> : <Icon name="tool" size={22} />}
                 </div>
                 <div className="quote-info">
                   <Link to={`/producto/${i.id}`} className="quote-name">
@@ -160,7 +161,7 @@ export default function Quote() {
                     {i.price != null ? formatPrice(i.price * i.qty) : 'A consultar'}
                   </div>
                   <button className="icon-btn" onClick={() => remove(i.id)} aria-label="Quitar" title="Quitar">
-                    🗑️
+                    <Icon name="trash" size={17} />
                   </button>
                 </div>
               </div>
@@ -222,14 +223,20 @@ export default function Quote() {
 
         {/* Acciones */}
         <div className="quote-actions-bar">
-          <button className="btn btn-primary" onClick={onWhatsApp}>
-            💬 Enviar por WhatsApp
+          <button className="btn btn-whatsapp" onClick={onWhatsApp}>
+            <Icon name="whatsapp" size={18} /> Enviar por WhatsApp
           </button>
           <button className="btn btn-ghost" onClick={onPdf}>
-            ⬇ Descargar PDF
+            <Icon name="download" size={17} /> Descargar PDF
           </button>
           <button className="btn btn-ice" onClick={onSave} disabled={saving}>
-            {saving ? 'Guardando…' : '💾 Guardar cotización'}
+            {saving ? (
+              'Guardando…'
+            ) : (
+              <>
+                <Icon name="save" size={17} /> Guardar cotización
+              </>
+            )}
           </button>
         </div>
       </div>

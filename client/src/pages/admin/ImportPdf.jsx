@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from '../../api.js'
 import ImagePicker from '../../components/ImagePicker.jsx'
+import Icon from '../../components/Icon.jsx'
 
 // Catálogo incluido en el repo (client/public/catalogos/), para no tener
 // que subirlo manualmente cada vez desde el equipo del admin.
@@ -92,7 +93,7 @@ export default function ImportPdf() {
       {error && <div className="error-box" style={{ marginBottom: 16 }}>{error}</div>}
       {result && (
         <div className="success-box" style={{ marginBottom: 16 }}>
-          ✓ {result.imported} producto(s) importado(s).
+          <Icon name="check-circle" size={15} /> {result.imported} producto(s) importado(s).
           {result.skipped.length > 0 &&
             ` ${result.skipped.length} omitido(s) por SKU duplicado.`}
         </div>
@@ -114,7 +115,13 @@ export default function ImportPdf() {
                     disabled={loadingRepo || loading}
                     onClick={() => loadFromRepo(c)}
                   >
-                    {loadingRepo ? 'Cargando…' : `📄 ${c.label}`}
+                    {loadingRepo ? (
+                      'Cargando…'
+                    ) : (
+                      <>
+                        <Icon name="file-text" size={15} /> {c.label}
+                      </>
+                    )}
                   </button>
                 ))}
               </div>
@@ -171,7 +178,7 @@ export default function ImportPdf() {
             <table>
               <thead>
                 <tr>
-                  <th style={{ width: 40 }}>✓</th>
+                  <th style={{ width: 40 }} aria-label="Incluir"><Icon name="check" size={14} /></th>
                   <th style={{ width: 140 }}>SKU</th>
                   <th>Nombre</th>
                   <th style={{ width: 150 }}>Categoría</th>
@@ -217,7 +224,13 @@ export default function ImportPdf() {
                           className="btn btn-ghost btn-sm"
                           onClick={() => setPickerRow(i)}
                         >
-                          {r.image_url ? 'Cambiar' : '🖼️ Elegir'}
+                          {r.image_url ? (
+                            'Cambiar'
+                          ) : (
+                            <>
+                              <Icon name="image" size={14} /> Elegir
+                            </>
+                          )}
                         </button>
                         {r.image_url && (
                           <img

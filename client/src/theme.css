@@ -13,6 +13,8 @@
   --blue: #00a3ff;
   --blue-2: #12c2ff;
   --gold: #ffb400;
+  --whatsapp: #25d366;
+  --whatsapp-dark: #1da851;
 
   --text: #f2f2f5;
   --text-dim: #a8a8b3;
@@ -139,6 +141,13 @@ h3 {
   }
 }
 
+/* Iconos SVG (sistema) */
+.icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  flex: none;
+}
+
 /* Botones */
 .btn {
   display: inline-flex;
@@ -193,6 +202,32 @@ h3 {
 }
 .btn-danger:hover {
   background: rgba(226, 35, 26, 0.12);
+}
+.btn-whatsapp {
+  background: var(--whatsapp);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.28);
+}
+.btn-whatsapp:hover {
+  background: var(--whatsapp-dark);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+}
+/* Enlaces con icono inline (flecha volver, etc.) */
+.link-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+/* Meta de contacto (cotización admin) con iconos */
+.quote-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+.quote-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 /* Tarjetas */

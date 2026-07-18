@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { api } from '../../api.js'
 import { formatPrice } from '../../components/ProductCard.jsx'
 import Pagination from '../../components/Pagination.jsx'
+import Icon from '../../components/Icon.jsx'
 
 const PAGE_SIZE = 20
 
 const FILTERS = [
   { value: 'all', label: 'Todos' },
-  { value: 'no_price', label: '💲 Sin precio' },
-  { value: 'no_photo', label: '📷 Sin foto' },
+  { value: 'no_price', label: 'Sin precio', icon: 'dollar' },
+  { value: 'no_photo', label: 'Sin foto', icon: 'camera' },
   { value: 'inactive', label: 'Inactivos' },
 ]
 
@@ -112,7 +113,12 @@ export default function ProductsAdmin() {
     }
   }
 
-  const arrow = (key) => (sortKey !== key ? ' ⇅' : sortDir === 'asc' ? ' ▲' : ' ▼')
+  const sortIcon = (key) => (
+    <Icon
+      name={sortKey !== key ? 'chevrons-updown' : sortDir === 'asc' ? 'chevron-up' : 'chevron-down'}
+      size={14}
+    />
+  )
 
   return (
     <>
@@ -139,7 +145,7 @@ export default function ProductsAdmin() {
               className={`facet-chip ${filter === f.value ? 'active' : ''}`}
               onClick={() => setFilter(f.value)}
             >
-              {f.label}
+              {f.icon && <Icon name={f.icon} size={13} />} {f.label}
               {f.value === 'no_price' && counts.no_price > 0 && (
                 <span className="facet-count">{counts.no_price}</span>
               )}
@@ -167,14 +173,14 @@ export default function ProductsAdmin() {
                 <tr>
                   <th style={{ width: 52 }}></th>
                   <th className="th-sort" onClick={() => toggleSort('sku')}>
-                    SKU{arrow('sku')}
+                    SKU {sortIcon('sku')}
                   </th>
                   <th className="th-sort" onClick={() => toggleSort('name')}>
-                    Nombre{arrow('name')}
+                    Nombre {sortIcon('name')}
                   </th>
                   <th>Categoría</th>
                   <th className="th-sort" onClick={() => toggleSort('price')}>
-                    Precio{arrow('price')}
+                    Precio {sortIcon('price')}
                   </th>
                   <th>Estado</th>
                   <th></th>
@@ -188,7 +194,7 @@ export default function ProductsAdmin() {
                         {p.image_url ? (
                           <img src={p.image_url} alt="" loading="lazy" />
                         ) : (
-                          <span title="Sin foto">🔧</span>
+                          <Icon name="tool" size={18} aria-label="Sin foto" />
                         )}
                       </div>
                     </td>
@@ -219,8 +225,9 @@ export default function ProductsAdmin() {
                           className="btn btn-ice btn-sm"
                           onClick={() => savePrice(p.id)}
                           disabled={priceEdit[p.id] === undefined}
+                          title="Guardar precio"
                         >
-                          ✓
+                          <Icon name="check" size={15} />
                         </button>
                       </div>
                     </td>

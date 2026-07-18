@@ -4,6 +4,7 @@ import { api } from '../api.js'
 import { formatPrice } from '../components/ProductCard.jsx'
 import { parseVehicle } from '../lib/vehicles.js'
 import { useSeo } from '../lib/useSeo.js'
+import Icon from '../components/Icon.jsx'
 import { useQuote } from '../context/QuoteContext.jsx'
 import { WHATSAPP } from '../lib/config.js'
 
@@ -79,7 +80,7 @@ export default function ProductDetail() {
         <div className="container">
           <p className="error-box">{error}</p>
           <Link to="/catalogo" className="btn btn-ghost" style={{ marginTop: 16 }}>
-            ← Volver al catálogo
+            <Icon name="arrow-left" size={16} /> Volver al catálogo
           </Link>
         </div>
       </section>
@@ -119,8 +120,8 @@ export default function ProductDetail() {
   return (
     <section className="section">
       <div className="container">
-        <Link to="/catalogo" className="muted">
-          ← Volver al catálogo
+        <Link to="/catalogo" className="muted link-icon">
+          <Icon name="arrow-left" size={16} /> Volver al catálogo
         </Link>
         <div className="detail-grid">
           <div className="detail-gallery">
@@ -128,9 +129,13 @@ export default function ProductDetail() {
               {mainImg ? (
                 <img src={mainImg} alt={product.name} />
               ) : (
-                <span className="detail-ph">🔧</span>
+                <Icon name="tool" size={64} className="detail-ph" />
               )}
-              {product.featured && <span className="ribbon">★ Destacado</span>}
+              {product.featured && (
+                <span className="ribbon">
+                  <Icon name="star" size={13} /> Destacado
+                </span>
+              )}
             </div>
             {gallery.length > 1 && (
               <div className="detail-thumbs">
@@ -200,7 +205,8 @@ export default function ProductDetail() {
                 onClick={() => add(product)}
                 disabled={has(product.id)}
               >
-                {has(product.id) ? '✓ En mi lista' : '＋ Agregar a mi lista'}
+                <Icon name={has(product.id) ? 'check' : 'plus'} size={17} />
+                {has(product.id) ? 'En mi lista' : 'Agregar a mi lista'}
               </button>
               <a
                 href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
@@ -208,15 +214,16 @@ export default function ProductDetail() {
                 )}`}
                 target="_blank"
                 rel="noreferrer"
-                className="btn btn-ice"
+                className="btn btn-whatsapp"
               >
-                💬 Consultar por WhatsApp
+                <Icon name="whatsapp" size={18} /> Consultar por WhatsApp
               </a>
             </div>
             {has(product.id) && (
               <p className="muted" style={{ marginTop: 10, fontSize: '0.9rem' }}>
-                <Link to="/cotizacion" className="card-cta">
-                  Ir a mi lista para generar la cotización →
+                <Link to="/cotizacion" className="card-cta link-icon">
+                  Ir a mi lista para generar la cotización{' '}
+                  <Icon name="arrow-right" size={15} />
                 </Link>
               </p>
             )}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../../api.js'
 import ImagePicker from '../../components/ImagePicker.jsx'
+import Icon from '../../components/Icon.jsx'
 import { parseVehicle, normalizeMake } from '../../lib/vehicles.js'
 
 const MAX_IMAGES = 4
@@ -216,7 +217,7 @@ export default function ProductEdit() {
                     title="Quitar foto"
                     onClick={() => removeImage(idx)}
                   >
-                    ✕
+                    <Icon name="x" size={14} />
                   </button>
                   {idx !== 0 && (
                     <button
@@ -225,7 +226,7 @@ export default function ProductEdit() {
                       title="Usar como portada"
                       onClick={() => makeCover(idx)}
                     >
-                      ★ Portada
+                      <Icon name="star" size={13} /> Portada
                     </button>
                   )}
                 </div>
@@ -240,10 +241,10 @@ export default function ProductEdit() {
                 className="btn btn-ice btn-sm"
                 onClick={() => setPickerOpen(true)}
               >
-                🖼️ Del catálogo
+                <Icon name="image" size={15} /> Del catálogo
               </button>
               <label className="btn btn-ghost btn-sm" style={{ cursor: uploading ? 'default' : 'pointer' }}>
-                📁 Subir archivo
+                <Icon name="upload" size={15} /> Subir archivo
                 <input
                   type="file"
                   accept="image/png,image/jpeg"
@@ -365,7 +366,7 @@ export default function ProductEdit() {
               checked={form.featured}
               onChange={(e) => set('featured', e.target.checked)}
             />
-            ⭐ Fijar arriba en "más solicitados" (opcional)
+            <Icon name="star" size={15} /> Fijar arriba en "más solicitados" (opcional)
           </label>
           <p className="muted" style={{ fontSize: '0.8rem', marginTop: 4 }}>
             El ranking de "más solicitados" es automático: se calcula solo,

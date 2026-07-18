@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api.js'
 import { formatPrice } from '../../components/ProductCard.jsx'
+import Icon from '../../components/Icon.jsx'
 
 const STATUSES = ['nuevo', 'atendido', 'cerrado']
 
@@ -92,8 +93,10 @@ export default function QuotesAdmin() {
         return (
           <div className="card" style={{ padding: '1.3rem', marginTop: '1.2rem', maxWidth: 560 }}>
             <h3 style={{ marginTop: 0 }}>{q.customer_name}</h3>
-            <p className="muted" style={{ marginTop: 0 }}>
-              📞 {q.phone}{q.email ? ` · ✉ ${q.email}` : ''}{q.vehicle ? ` · 🚚 ${q.vehicle}` : ''}
+            <p className="muted quote-meta" style={{ marginTop: 0 }}>
+              <span><Icon name="phone" size={14} /> {q.phone}</span>
+              {q.email && <span><Icon name="mail" size={14} /> {q.email}</span>}
+              {q.vehicle && <span><Icon name="truck" size={14} /> {q.vehicle}</span>}
             </p>
             {q.notes && <p><strong>Notas:</strong> {q.notes}</p>}
             <div className="table-wrap">

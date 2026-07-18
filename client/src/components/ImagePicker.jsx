@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import Icon from './Icon.jsx'
 
 // Galería modal para elegir una foto del catálogo (servidas desde /productos).
 // `label` (opcional): nombre del producto al que se le está asignando la foto,
@@ -47,7 +48,7 @@ export default function ImagePicker({ open, onClose, onSelect, label }) {
               ))}
             </select>
             <button className="btn btn-ghost btn-sm" onClick={onClose}>
-              Cerrar ✕
+              Cerrar <Icon name="x" size={15} />
             </button>
           </div>
         </div>

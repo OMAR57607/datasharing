@@ -4,22 +4,23 @@ import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
 import { makeOf } from '../lib/vehicles.js'
 import HeroFX from '../components/HeroFX.jsx'
+import Icon from '../components/Icon.jsx'
 import { useSeo } from '../lib/useSeo.js'
 import { animate, stagger, observeReveal, reducedMotion } from '../lib/anim.js'
 
 const CAT_ICON = {
-  'Roll Bars': '🏎️',
-  Racks: '🧺',
-  'Bullbars / Bumpers': '🛡️',
-  Brackets: '🔩',
-  'Cajas / Tool Box': '🧰',
-  'Tapas / Casetas': '🚪',
-  Cerraduras: '🔒',
-  'Estribos / Escalones': '🪜',
-  Bedliners: '🛻',
-  Accesorio: '🔧',
+  'Roll Bars': 'car',
+  Racks: 'layers',
+  'Bullbars / Bumpers': 'shield',
+  Brackets: 'tool',
+  'Cajas / Tool Box': 'box',
+  'Tapas / Casetas': 'truck',
+  Cerraduras: 'lock',
+  'Estribos / Escalones': 'stairs',
+  Bedliners: 'grid',
+  Accesorio: 'tool',
 }
-const iconFor = (c) => CAT_ICON[c] || '🔧'
+const iconFor = (c) => CAT_ICON[c] || 'tool'
 
 export default function Home() {
   const [all, setAll] = useState([])
@@ -117,9 +118,9 @@ export default function Home() {
               </a>
             </div>
             <div className="hero-trust">
-              <span>🚚 Envíos a todo el país</span>
-              <span>🛡️ Calidad garantizada</span>
-              <span>💬 Asesoría directa</span>
+              <span><Icon name="truck" size={17} /> Envíos a todo el país</span>
+              <span><Icon name="shield" size={17} /> Calidad garantizada</span>
+              <span><Icon name="message" size={17} /> Asesoría directa</span>
             </div>
           </div>
           <div className="hero-logo">
@@ -156,7 +157,7 @@ export default function Home() {
                   to={`/catalogo?category=${encodeURIComponent(c)}`}
                   className="strip-item"
                 >
-                  <span className="ico">{iconFor(c)}</span>
+                  <span className="ico"><Icon name={iconFor(c)} size={26} /></span>
                   {c}
                   <span className="strip-count">{n}</span>
                 </Link>

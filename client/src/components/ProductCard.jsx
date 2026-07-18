@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useQuote } from '../context/QuoteContext.jsx'
 import { makeOf } from '../lib/vehicles.js'
 import { useTilt } from '../lib/useTilt.js'
+import Icon from './Icon.jsx'
 import { WHATSAPP } from '../lib/config.js'
 
 export function formatPrice(value) {
@@ -36,11 +37,19 @@ export default function ProductCard({ product }) {
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} loading="lazy" />
         ) : (
-          <span>🔧</span>
+          <Icon name="tool" size={38} className="thumb-ph" />
         )}
         {make && <span className="veh-badge">{make}</span>}
-        {product.featured && <span className="orig-badge">★ Destacado</span>}
-        {photoCount > 1 && <span className="photo-count">📷 {photoCount}</span>}
+        {product.featured && (
+          <span className="orig-badge">
+            <Icon name="star" size={12} /> Destacado
+          </span>
+        )}
+        {photoCount > 1 && (
+          <span className="photo-count">
+            <Icon name="camera" size={12} /> {photoCount}
+          </span>
+        )}
       </Link>
 
       <div className="product-body">
@@ -68,7 +77,7 @@ export default function ProductCard({ product }) {
             className="btn-consultar"
             onClick={(e) => e.stopPropagation()}
           >
-            💬 Consultar
+            <Icon name="whatsapp" size={17} /> Consultar
           </a>
         </div>
 
@@ -77,7 +86,8 @@ export default function ProductCard({ product }) {
           onClick={() => add(product)}
           disabled={inList}
         >
-          {inList ? '✓ En mi lista' : '＋ Añadir a mi lista'}
+          <Icon name={inList ? 'check' : 'plus'} size={16} />
+          {inList ? 'En mi lista' : 'Añadir a mi lista'}
         </button>
       </div>
     </div>
