@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
+import NitroStats from '../components/NitroStats.jsx'
 import { makeOf } from '../lib/vehicles.js'
 import HeroFX from '../components/HeroFX.jsx'
 import { revealStagger, observeReveal } from '../lib/anim.js'
@@ -107,6 +108,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Banda de estadísticas con tacómetro animado */}
+      {!loading && <NitroStats products={all} />}
 
       {/* Buscar por vehículo */}
       {makes.length > 0 && (

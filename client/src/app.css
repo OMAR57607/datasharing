@@ -1067,6 +1067,134 @@
 .section-tight {
   padding: 1.5rem 0;
 }
+
+/* ===== Banda premium de estadísticas (tacómetro anime.js) ===== */
+.nitro-stats {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: 1.6rem;
+  align-items: center;
+  padding: 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(120% 120% at 15% 0%, rgba(255, 90, 0, 0.14), transparent 55%),
+    radial-gradient(120% 120% at 100% 100%, rgba(45, 156, 255, 0.1), transparent 55%),
+    var(--bg-2);
+  overflow: hidden;
+}
+.nitro-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.nitro-gauge svg {
+  width: 100%;
+  max-width: 300px;
+  overflow: visible;
+}
+.gauge-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.09);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+.gauge-fill {
+  fill: none;
+  stroke: url(#gaugeGrad);
+  stroke-width: 12;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(255, 90, 0, 0.55));
+}
+.tick {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1.5;
+}
+.tick-major {
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 2.5;
+}
+.needle {
+  stroke: #fff;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(255, 90, 0, 0.9));
+}
+.hub {
+  fill: var(--orange, #ff5a00);
+  stroke: #fff;
+  stroke-width: 2;
+}
+.gauge-readout {
+  text-align: center;
+  margin-top: -0.4rem;
+}
+.gauge-readout strong {
+  display: block;
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1;
+  background: var(--grad-fire, linear-gradient(90deg, #ffb020, #ff5a00, #e2231a));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-variant-numeric: tabular-nums;
+}
+.gauge-readout span {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.nitro-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.nitro-tile {
+  padding: 1.1rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+.nitro-tile strong {
+  display: block;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.nitro-tile .nitro-range i {
+  font-style: normal;
+  color: var(--orange-2);
+  margin: 0 1px;
+}
+.nitro-tile span {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+@media (max-width: 720px) {
+  .nitro-stats {
+    grid-template-columns: 1fr;
+  }
+  .nitro-tiles {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+  }
+  .nitro-tile {
+    padding: 0.8rem 0.5rem;
+  }
+  .nitro-tile strong {
+    font-size: 1.5rem;
+  }
+}
+
 .mini-title {
   font-size: 1rem;
   text-transform: uppercase;
