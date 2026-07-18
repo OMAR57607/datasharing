@@ -112,6 +112,39 @@
   position: relative;
   z-index: 1;
 }
+/* Aurora cinemática: dos halos (fuego / hielo) que respiran y flotan detrás
+   del contenido del hero. */
+.hero-aurora {
+  position: absolute;
+  inset: -20% -10%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 55% at 22% 28%, rgba(255, 90, 0, 0.35), transparent 60%),
+    radial-gradient(34% 50% at 82% 68%, rgba(0, 140, 255, 0.24), transparent 62%),
+    radial-gradient(40% 45% at 60% 12%, rgba(255, 176, 32, 0.18), transparent 60%);
+  filter: blur(28px) saturate(1.15);
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-aurora {
+    animation: heroAurora 14s ease-in-out infinite alternate;
+  }
+}
+@keyframes heroAurora {
+  0% {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(4%, -3%, 0) scale(1.04);
+    opacity: 0.9;
+  }
+}
 .hero-grid {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
@@ -254,12 +287,30 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: transform 0.12s, border-color 0.15s, box-shadow 0.15s;
+  transform-style: preserve-3d;
+  transition: transform 0.18s ease-out, border-color 0.15s, box-shadow 0.2s ease-out;
+  will-change: transform;
 }
 .product-card:hover {
-  transform: translateY(-4px);
   border-color: var(--orange);
-  box-shadow: var(--shadow);
+  box-shadow: 0 26px 55px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 90, 0, 0.22);
+}
+/* Destello que sigue al cursor (tilt 3D). */
+.card-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--glare, 0);
+  transition: opacity 0.25s ease-out;
+  background: radial-gradient(
+    240px circle at var(--gx, 50%) var(--gy, 50%),
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 140, 40, 0.05) 40%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
 }
 .product-thumb {
   position: relative;
@@ -1066,133 +1117,6 @@
 /* ===== Secciones compactas (Home) ===== */
 .section-tight {
   padding: 1.5rem 0;
-}
-
-/* ===== Banda premium de estadísticas (tacómetro anime.js) ===== */
-.nitro-stats {
-  display: grid;
-  grid-template-columns: minmax(240px, 320px) 1fr;
-  gap: 1.6rem;
-  align-items: center;
-  padding: 1.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background:
-    radial-gradient(120% 120% at 15% 0%, rgba(255, 90, 0, 0.14), transparent 55%),
-    radial-gradient(120% 120% at 100% 100%, rgba(45, 156, 255, 0.1), transparent 55%),
-    var(--bg-2);
-  overflow: hidden;
-}
-.nitro-gauge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.nitro-gauge svg {
-  width: 100%;
-  max-width: 300px;
-  overflow: visible;
-}
-.gauge-track {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.09);
-  stroke-width: 12;
-  stroke-linecap: round;
-}
-.gauge-fill {
-  fill: none;
-  stroke: url(#gaugeGrad);
-  stroke-width: 12;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 6px rgba(255, 90, 0, 0.55));
-}
-.tick {
-  stroke: rgba(255, 255, 255, 0.22);
-  stroke-width: 1.5;
-}
-.tick-major {
-  stroke: rgba(255, 255, 255, 0.5);
-  stroke-width: 2.5;
-}
-.needle {
-  stroke: #fff;
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 4px rgba(255, 90, 0, 0.9));
-}
-.hub {
-  fill: var(--orange, #ff5a00);
-  stroke: #fff;
-  stroke-width: 2;
-}
-.gauge-readout {
-  text-align: center;
-  margin-top: -0.4rem;
-}
-.gauge-readout strong {
-  display: block;
-  font-size: 2.6rem;
-  font-weight: 900;
-  line-height: 1;
-  background: var(--grad-fire, linear-gradient(90deg, #ffb020, #ff5a00, #e2231a));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-variant-numeric: tabular-nums;
-}
-.gauge-readout span {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-.nitro-tiles {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-.nitro-tile {
-  padding: 1.1rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
-  text-align: center;
-}
-.nitro-tile strong {
-  display: block;
-  font-size: 2rem;
-  font-weight: 900;
-  line-height: 1;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-.nitro-tile .nitro-range i {
-  font-style: normal;
-  color: var(--orange-2);
-  margin: 0 1px;
-}
-.nitro-tile span {
-  display: block;
-  margin-top: 0.4rem;
-  font-size: 0.74rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-@media (max-width: 720px) {
-  .nitro-stats {
-    grid-template-columns: 1fr;
-  }
-  .nitro-tiles {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.6rem;
-  }
-  .nitro-tile {
-    padding: 0.8rem 0.5rem;
-  }
-  .nitro-tile strong {
-    font-size: 1.5rem;
-  }
 }
 
 .mini-title {

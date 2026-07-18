@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useQuote } from '../context/QuoteContext.jsx'
 import { makeOf } from '../lib/vehicles.js'
+import { useTilt } from '../lib/useTilt.js'
 import { WHATSAPP } from '../lib/config.js'
 
 export function formatPrice(value) {
@@ -18,12 +19,19 @@ export default function ProductCard({ product }) {
   const inList = has(product.id)
   const make = makeOf(product)
   const photoCount = Array.isArray(product.images) ? product.images.length : 0
+  const tilt = useTilt()
   const waHref = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
     `Hola, me interesa: ${product.name}${product.sku ? ' (' + product.sku + ')' : ''}`
   )}`
 
   return (
-    <div className="product-card">
+    <div
+      className="product-card"
+      ref={tilt.ref}
+      onMouseMove={tilt.onMouseMove}
+      onMouseLeave={tilt.onMouseLeave}
+    >
+      <span className="card-glare" aria-hidden="true" />
       <Link to={`/producto/${product.id}`} className="product-thumb">
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} loading="lazy" />

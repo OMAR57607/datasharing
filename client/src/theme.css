@@ -118,9 +118,25 @@ h3 {
 
 .text-grad {
   background: var(--grad-brand);
+  background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+/* Brillo que barre el degradado del texto de marca (continuo, sutil). */
+@media (prefers-reduced-motion: no-preference) {
+  .text-grad {
+    animation: gradShimmer 6s ease-in-out infinite;
+  }
+}
+@keyframes gradShimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* Botones */

@@ -2,10 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
-import NitroStats from '../components/NitroStats.jsx'
 import { makeOf } from '../lib/vehicles.js'
 import HeroFX from '../components/HeroFX.jsx'
-import { revealStagger, observeReveal } from '../lib/anim.js'
+import { animate, stagger, observeReveal, reducedMotion } from '../lib/anim.js'
 
 const CAT_ICON = {
   'Roll Bars': '🏎️',
@@ -35,11 +34,24 @@ export default function Home() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Entrada animada del texto del hero (una sola vez, al montar).
+  // Entrada cinemática del hero: cada línea "arranca" desde la izquierda con
+  // un leve skew (sensación de velocidad) y se asienta. Una sola vez al montar.
   useEffect(() => {
-    if (heroRef.current) {
-      revealStagger([...heroRef.current.children], { duration: 720 })
+    const root = heroRef.current
+    if (!root) return
+    const els = [...root.children]
+    if (reducedMotion()) {
+      els.forEach((e) => (e.style.opacity = '1'))
+      return
     }
+    animate(els, {
+      opacity: [0, 1],
+      x: [-48, 0],
+      skewX: [7, 0],
+      duration: 950,
+      delay: stagger(95, { start: 120 }),
+      ease: 'outExpo',
+    })
   }, [])
 
   // Revelado al hacer scroll de las tarjetas de producto.
@@ -76,6 +88,7 @@ export default function Home() {
   return (
     <>
       <section className="hero">
+        <div className="hero-aurora" aria-hidden="true" />
         <HeroFX />
         <div className="container hero-grid">
           <div ref={heroRef}>
@@ -108,9 +121,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Banda de estadísticas con tacómetro animado */}
-      {!loading && <NitroStats products={all} />}
 
       {/* Buscar por vehículo */}
       {makes.length > 0 && (
