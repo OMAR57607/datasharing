@@ -1403,6 +1403,125 @@
   align-self: flex-end;
 }
 
+/* ===== Armador de cotización (admin) ===== */
+.qb-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.4rem;
+  align-items: start;
+}
+.qb-results {
+  position: absolute;
+  left: 1.1rem;
+  right: 1.1rem;
+  top: calc(100% - 0.4rem);
+  z-index: 20;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.qb-result {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+.qb-result:last-child {
+  border-bottom: none;
+}
+.qb-result:hover {
+  background: var(--bg-3);
+  color: var(--orange-2);
+}
+.qb-result-thumb {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--text-faint);
+}
+.qb-result-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.qb-result-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.qb-result-info strong {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qb-result-price {
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.qb-totals {
+  margin-top: 1rem;
+  margin-left: auto;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.qb-totals > div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+}
+.qb-totals .qb-total {
+  border-top: 1px solid var(--border);
+  margin-top: 0.35rem;
+  padding-top: 0.5rem;
+  color: var(--text);
+  font-size: 1.15rem;
+}
+.qb-totals .qb-total strong {
+  color: var(--orange-2);
+}
+.qb-customer {
+  position: sticky;
+  top: 1rem;
+}
+.qb-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.qb-actions .btn {
+  justify-content: center;
+}
+@media (max-width: 860px) {
+  .qb-grid {
+    grid-template-columns: 1fr;
+  }
+  .qb-customer {
+    position: static;
+  }
+}
+
 /* ===== Tabla de productos (admin) ===== */
 .filter-chips {
   display: flex;

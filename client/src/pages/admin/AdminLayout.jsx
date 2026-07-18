@@ -37,6 +37,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/precios">
             <Icon name="tag" size={18} /> Carga de precios
           </NavLink>
+          <NavLink to="/admin/cotizador">
+            <Icon name="edit" size={18} /> Armar cotización
+          </NavLink>
           <NavLink to="/admin/cotizaciones">
             <Icon name="receipt" size={18} /> Cotizaciones
           </NavLink>
