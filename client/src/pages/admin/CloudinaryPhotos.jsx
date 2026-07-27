@@ -60,6 +60,7 @@ export default function CloudinaryPhotos() {
   const [dropSuffix, setDropSuffix] = useState(true)
   const [fixSku, setFixSku] = useState(true)
   const [alsoUnnamed, setAlsoUnnamed] = useState(false)
+  const [orphanSel, setOrphanSel] = useState({}) // id -> false para salvarlo
   const [createNew, setCreateNew] = useState(true)
   const [publishNew, setPublishNew] = useState(false)
   const [newCategory, setNewCategory] = useState('')
@@ -240,6 +241,28 @@ export default function CloudinaryPhotos() {
     [rows]
   )
 
+  // La carpeta es el catálogo curado: todo producto cuyo SKU no esté ahí
+  // quedó del catálogo viejo (importación del PDF).
+  const orphans = useMemo(() => {
+    if (!photos) return []
+    const inFolder = new Set(rows.filter((r) => !r.auto).map((r) => norm(r.sku)))
+    return products.filter((p) => !inFolder.has(norm(p.sku || '')))
+  }, [photos, rows, products])
+
+  const orphanStats = useMemo(
+    () => ({
+      conPrecio: orphans.filter((p) => p.current_price != null).length,
+      activos: orphans.filter((p) => p.active).length,
+      sinSku: orphans.filter((p) => !p.sku).length,
+    }),
+    [orphans]
+  )
+
+  const orphanIds = useMemo(
+    () => orphans.filter((p) => orphanSel[p.id] !== false).map((p) => p.id),
+    [orphans, orphanSel]
+  )
+
   // Productos que todavía muestran una foto del catálogo en PDF.
   const legacy = useMemo(() => {
     const isOld = (u) => isLegacyPhoto(u) || (alsoUnnamed && unnamedUrls.has(u))
@@ -278,6 +301,44 @@ export default function CloudinaryPhotos() {
       setResult(res)
       // Relee los productos para reflejar el estado real tras aplicar.
       setProducts(await api.listProducts({ includeInactive: 1, raw: true }))
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+      setProgress(null)
+    }
+  }
+
+  // Da de baja los productos que no están en la carpeta: desactivarlos los
+  // saca de la tienda y se puede deshacer; borrarlos no.
+  async function dropOrphans(mode) {
+    const ids = orphanIds
+    if (ids.length === 0) return
+    const aviso =
+      mode === 'delete'
+        ? `Se van a BORRAR ${ids.length} producto(s) para siempre, junto con su ` +
+          `historial de precios (${orphanStats.conPrecio} tienen precio cargado). ` +
+          'Las cotizaciones ya emitidas no se tocan. ¿Seguir?'
+        : `Se van a desactivar ${ids.length} producto(s): dejan de verse en la ` +
+          'tienda pero quedan en el panel y los podés reactivar. ¿Seguir?'
+    if (!confirm(aviso)) return
+    if (mode === 'delete' && !confirm('Última confirmación: el borrado no se puede deshacer.')) return
+
+    setLoading(true)
+    setError('')
+    setResult(null)
+    setProgress({ done: 0, total: ids.length })
+    try {
+      const onStep = (done, total) => setProgress({ done, total })
+      if (mode === 'delete') await api.bulkDeleteProducts(ids, onStep)
+      else await api.bulkSetActive(ids, false, onStep)
+      setProducts(await api.listProducts({ includeInactive: 1, raw: true }))
+      setResult({
+        updated: mode === 'delete' ? 0 : ids.length,
+        created: 0,
+        deleted: mode === 'delete' ? ids.length : 0,
+        errors: [],
+      })
     } catch (e) {
       setError(e.message)
     } finally {
@@ -336,6 +397,7 @@ export default function CloudinaryPhotos() {
         <div className="success-box" style={{ marginBottom: 16 }}>
           <Icon name="check-circle" size={15} /> {result.updated} producto(s) actualizado(s) y{' '}
           {result.created} creado(s).
+          {result.deleted > 0 && ` ${result.deleted} borrado(s).`}
           {result.errors.length > 0 && ` ${result.errors.length} con error: ${result.errors[0]}`}
         </div>
       )}
@@ -598,6 +660,96 @@ export default function CloudinaryPhotos() {
                 : `Quitar de ${legacy.length} producto(s)`}
             </button>
           </div>
+
+          {orphans.length > 0 && (
+            <div className="card" style={{ padding: '1.25rem', margin: '1.5rem 0' }}>
+              <strong style={{ display: 'block', marginBottom: '0.5rem' }}>
+                Productos que no están en la carpeta ({orphans.length})
+              </strong>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Si la carpeta es el catálogo curado, estos quedaron del catálogo
+                viejo: ningún archivo de Cloudinary tiene su SKU.{' '}
+                <strong>{orphanStats.activos}</strong> están activos en la tienda,{' '}
+                <strong>{orphanStats.conPrecio}</strong> tienen precio cargado
+                {orphanStats.sinSku > 0 && <> y <strong>{orphanStats.sinSku}</strong> no tienen SKU</>}.
+                Desmarcá el que quieras salvar.
+              </p>
+              <p className="muted" style={{ marginTop: 0, fontSize: '0.85rem' }}>
+                <strong>Desactivar</strong> los saca de la tienda y se puede deshacer.{' '}
+                <strong>Borrar</strong> es definitivo y se lleva el historial de
+                precios; las cotizaciones ya emitidas no se tocan porque guardan su
+                propia copia.
+              </p>
+
+              <div className="table-wrap" style={{ maxHeight: 320, overflowY: 'auto' }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 40 }} aria-label="Incluir">
+                        <Icon name="check" size={14} />
+                      </th>
+                      <th style={{ width: 150 }}>SKU</th>
+                      <th>Nombre</th>
+                      <th style={{ width: 110 }}>Precio</th>
+                      <th style={{ width: 90 }}>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orphans.map((p) => (
+                      <tr key={p.id} style={{ opacity: orphanSel[p.id] === false ? 0.5 : 1 }}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            style={{ width: 'auto' }}
+                            checked={orphanSel[p.id] !== false}
+                            onChange={() =>
+                              setOrphanSel((prev) => ({
+                                ...prev,
+                                [p.id]: prev[p.id] === false,
+                              }))
+                            }
+                          />
+                        </td>
+                        <td className="product-sku">{p.sku || '—'}</td>
+                        <td>{p.name}</td>
+                        <td>
+                          {p.current_price != null ? (
+                            <span className="badge badge-cat">con precio</span>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
+                        </td>
+                        <td>
+                          {p.active ? (
+                            <span className="badge badge-cat">activo</span>
+                          ) : (
+                            <span className="badge badge-off">inactivo</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="row" style={{ marginTop: '1rem', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-ice"
+                  onClick={() => dropOrphans('deactivate')}
+                  disabled={loading || orphanIds.length === 0}
+                >
+                  Desactivar {orphanIds.length} (reversible)
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => dropOrphans('delete')}
+                  disabled={loading || orphanIds.length === 0}
+                >
+                  <Icon name="trash" size={15} /> Borrar {orphanIds.length} definitivamente
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </>

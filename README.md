@@ -141,6 +141,24 @@ se toca, porque el sufijo real siempre viene en minúscula.
 No hacen falta variables de entorno nuevas: se usan las credenciales de
 Cloudinary que ya están configuradas.
 
+## Dar de baja lo que quedó del catálogo viejo
+
+Si la carpeta de Cloudinary es el catálogo curado, todo producto cuyo SKU no
+aparezca ahí quedó de la importación del PDF. Al final de **Fotos de Cloudinary**
+se listan esos productos, marcando cuáles están activos y cuáles tienen precio
+cargado, con un checkbox por fila para salvar los que quieras conservar.
+
+| Acción | Qué hace |
+| --- | --- |
+| **Desactivar** | `active = false`: dejan de verse en la tienda, siguen en el panel y se pueden reactivar. |
+| **Borrar** | Definitivo. Se lleva el historial de precios (`price_history` tiene `on delete cascade`). |
+
+Las cotizaciones ya emitidas no se ven afectadas en ningún caso: `quotes.items`
+guarda su propia copia de cada ítem, sin clave foránea a `products`.
+
+Conviene hacerlo al final: primero **Aplicar** las fotos (así los SKU de la
+carpeta que faltaban quedan creados) y después la baja.
+
 ## Las fotos viejas del catálogo en PDF
 
 Antes cada página del PDF se subía como imagen y el admin le asignaba una página
