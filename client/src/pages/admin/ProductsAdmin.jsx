@@ -4,6 +4,7 @@ import { api } from '../../api.js'
 import { formatPrice } from '../../components/ProductCard.jsx'
 import Pagination from '../../components/Pagination.jsx'
 import Icon from '../../components/Icon.jsx'
+import CoverPicker from '../../components/CoverPicker.jsx'
 
 const PAGE_SIZE = 20
 
@@ -24,6 +25,8 @@ export default function ProductsAdmin() {
   const [sortKey, setSortKey] = useState('created') // sku | name | price | created
   const [sortDir, setSortDir] = useState('desc')
   const [page, setPage] = useState(1)
+  const [coverFor, setCoverFor] = useState(null) // producto con el selector de portada abierto
+  const [savingCover, setSavingCover] = useState(false)
 
   function load() {
     setLoading(true)
@@ -94,6 +97,19 @@ export default function ProductsAdmin() {
       setProducts((prev) => prev.filter((p) => p.id !== id))
     } catch (e) {
       setError(e.message)
+    }
+  }
+
+  async function chooseCover(url) {
+    setSavingCover(true)
+    try {
+      const updated = await api.setCover(coverFor, url)
+      setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+      setCoverFor(updated)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSavingCover(false)
     }
   }
 
@@ -190,13 +206,25 @@ export default function ProductsAdmin() {
                 {pageItems.map((p) => (
                   <tr key={p.id}>
                     <td>
-                      <div className="admin-thumb">
-                        {p.image_url ? (
+                      {(p.images?.length || 0) > 1 ? (
+                        <button
+                          type="button"
+                          className="admin-thumb thumb-btn"
+                          onClick={() => setCoverFor(p)}
+                          title={`Elegir portada (${p.images.length} fotos)`}
+                        >
                           <img src={p.image_url} alt="" loading="lazy" />
-                        ) : (
-                          <Icon name="tool" size={18} aria-label="Sin foto" />
-                        )}
-                      </div>
+                          <span className="thumb-count">{p.images.length}</span>
+                        </button>
+                      ) : (
+                        <div className="admin-thumb">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt="" loading="lazy" />
+                          ) : (
+                            <Icon name="tool" size={18} aria-label="Sin foto" />
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="product-sku">{p.sku || '—'}</td>
                     <td>{p.name}</td>
@@ -261,6 +289,15 @@ export default function ProductsAdmin() {
           </div>
           <Pagination page={safePage} pageCount={pageCount} onPage={setPage} />
         </>
+      )}
+
+      {coverFor && (
+        <CoverPicker
+          product={coverFor}
+          saving={savingCover}
+          onClose={() => setCoverFor(null)}
+          onSelect={chooseCover}
+        />
       )}
     </>
   )
