@@ -1,7 +1,6 @@
 import { getUserFromRequest } from './_lib/auth.js'
 import { parseMultipart } from './_lib/multipart.js'
 import { parsePdfText } from './_lib/pdf.js'
-import { uploadBuffer, uploadRemote, pdfPageUrl } from './_lib/cloudinary.js'
 
 // En Vercel: desactivar el bodyParser para manejar el cuerpo manualmente
 // (multipart para archivos subidos, o JSON con una URL de PDF ya alojado).
@@ -29,7 +28,6 @@ export default async function handler(req, res) {
   try {
     let buffer
     let filename
-    let remoteUrl = null
 
     if (contentType.includes('application/json')) {
       // Modo URL: la Function descarga el PDF (evita el límite de tamaño
@@ -37,7 +35,6 @@ export default async function handler(req, res) {
       const raw = await readRawBody(req)
       const { url } = JSON.parse(raw.toString('utf8') || '{}')
       if (!url) return res.status(400).json({ error: 'Falta la URL del PDF' })
-      remoteUrl = url
       const pdfRes = await fetch(url)
       if (!pdfRes.ok) {
         return res.status(400).json({ error: 'No se pudo descargar el PDF (' + pdfRes.status + ')' })
@@ -55,36 +52,16 @@ export default async function handler(req, res) {
       filename = file.filename
     }
 
-    // 1) Extraer texto → candidatos de producto (sin precio).
+    // Del PDF solo se extrae el texto → candidatos de producto (sin precio).
+    // Las páginas ya no se suben como imagen: las fotos salen del Media
+    // Library de Cloudinary, con el SKU como nombre de archivo.
     const { pages, products } = await parsePdfText(buffer)
-
-    // 2) Subir el PDF a Cloudinary; sus páginas quedan disponibles como
-    //    imágenes vía transformación de URL (pg_1, pg_2, …).
-    let pdfPublicId = null
-    let pageImages = []
-    try {
-      const uploaded = remoteUrl
-        ? await uploadRemote(remoteUrl, { folder: 'nitro-garage/catalogos', resourceType: 'image' })
-        : await uploadBuffer(buffer, { folder: 'nitro-garage/catalogos', resourceType: 'image' })
-      pdfPublicId = uploaded.public_id
-      const total = uploaded.pages || pages || 0
-      pageImages = Array.from({ length: total }, (_, i) => ({
-        page: i + 1,
-        url: pdfPageUrl(pdfPublicId, i + 1),
-      }))
-    } catch (e) {
-      // Si falla Cloudinary (sin credenciales o límite de tamaño), seguimos
-      // con el texto: la importación de productos no se bloquea.
-      console.error('Cloudinary:', e.message)
-    }
 
     res.json({
       filename,
       pages,
       count: products.length,
       products,
-      pdfPublicId,
-      pageImages,
     })
   } catch (err) {
     res.status(400).json({ error: 'No se pudo procesar el PDF: ' + err.message })

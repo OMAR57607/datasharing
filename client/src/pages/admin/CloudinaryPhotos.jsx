@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../api.js'
+import { isLegacyPhoto } from '../../lib/photos.js'
 import Icon from '../../components/Icon.jsx'
 
 const DEFAULT_FOLDER = 'nitro-garage/productos'
 const MAX_GALLERY = 4
+const IMG_EXT = /\.(jpe?g|png|webp|gif|avif|bmp|tiff?)$/i
+// Sufijo aleatorio que agrega Cloudinary al subir: 6 caracteres en minúscula.
+const CLOUD_SUFFIX = /_[a-z0-9]{6}$/
 
 // El nombre del archivo ES el SKU: es la fuente de la verdad. `norm` solo se
 // usa para encontrar al producto cuando en la base quedó escrito distinto
@@ -15,33 +19,29 @@ const norm = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
 const looksAuto = (s) => /^[a-z0-9]{16,}$/.test(String(s || ''))
 
 /**
- * Códigos a probar para una imagen, del más literal al más flexible:
- *  · `exacto`   — el nombre del archivo tal cual.
- *  · `sufijo`   — sin el sufijo aleatorio que agrega Cloudinary al subir
- *                 ("XBARRAV4_pbgioe" → "XBARRAV4"): lo pone el sistema, no vos,
- *                 así que no es parte del SKU. Siempre son 6 caracteres en
- *                 minúscula, por eso la búsqueda distingue mayúsculas.
- *  · `variante` — sin la numeración de las fotos extra ("ACC-001-2"), que
- *                 solo aplica si esa numeración la escribiste vos.
+ * Lee el nombre del archivo, que es la fuente de la verdad:
  *
- * El último de la lista es el SKU autoritativo del archivo: el que se usa
- * para dar de alta el producto si el código todavía no existe.
+ *   STEP2_t8yc8d     → SKU "STEP2", foto 1 (portada)
+ *   STEP2.2_huvrdu   → SKU "STEP2", foto 2
+ *
+ * Se le saca, en este orden, la extensión, el sufijo aleatorio que agrega
+ * Cloudinary al subir (no lo escribiste vos, no es parte del SKU) y la
+ * numeración `.N` de las fotos de un mismo producto.
  */
-function candidates(name, { dropSuffix, dropVariant }) {
-  const base = String(name || '')
-    .trim()
-    .replace(/\.[a-z0-9]{2,5}$/i, '')
-  const list = [{ code: base, kind: 'exacto' }]
+function parseName(name, { dropSuffix }) {
+  const base = String(name || '').trim().replace(IMG_EXT, '')
+  let code = base
   if (dropSuffix) {
-    const noSuffix = base.replace(/_[a-z0-9]{6}$/, '')
-    if (noSuffix && noSuffix !== base) list.push({ code: noSuffix, kind: 'sufijo' })
+    const noSuffix = code.replace(CLOUD_SUFFIX, '')
+    if (noSuffix) code = noSuffix
   }
-  if (dropVariant) {
-    const last = list[list.length - 1].code
-    const noVariant = last.replace(/(?:[\s._-]\d{1,2}|\s*\(\d{1,2}\))$/, '')
-    if (noVariant && noVariant !== last) list.push({ code: noVariant, kind: 'variante' })
+  let photo = 1
+  const numbered = code.match(/^(.+)\.([1-9])$/)
+  if (numbered) {
+    code = numbered[1]
+    photo = Number(numbered[2])
   }
-  return list
+  return { base, sku: code.trim(), photo }
 }
 
 export default function CloudinaryPhotos() {
@@ -56,16 +56,20 @@ export default function CloudinaryPhotos() {
   const [progress, setProgress] = useState(null) // { done, total }
 
   // Opciones de aplicación.
-  const [replace, setReplace] = useState(false)
+  const [replace, setReplace] = useState(true)
   const [dropSuffix, setDropSuffix] = useState(true)
-  const [dropVariant, setDropVariant] = useState(false)
   const [fixSku, setFixSku] = useState(true)
+  const [alsoUnnamed, setAlsoUnnamed] = useState(false)
   const [createNew, setCreateNew] = useState(true)
   const [publishNew, setPublishNew] = useState(false)
   const [newCategory, setNewCategory] = useState('')
 
   useEffect(() => {
-    api.listProducts({ includeInactive: 1 }).then(setProducts).catch((e) => setError(e.message))
+    // `raw`: hace falta ver las fotos viejas del PDF para poder limpiarlas.
+    api
+      .listProducts({ includeInactive: 1, raw: true })
+      .then(setProducts)
+      .catch((e) => setError(e.message))
   }, [])
 
   async function load() {
@@ -75,7 +79,7 @@ export default function CloudinaryPhotos() {
     try {
       const [data, prods] = await Promise.all([
         api.listCloudinaryPhotos(folder),
-        api.listProducts({ includeInactive: 1 }),
+        api.listProducts({ includeInactive: 1, raw: true }),
       ])
       setProducts(prods)
       setPhotos(data.photos)
@@ -105,13 +109,11 @@ export default function CloudinaryPhotos() {
     }
 
     return photos.map((ph) => {
-      const list = candidates(ph.name, { dropSuffix, dropVariant })
-      const base = list[0].code
-      // El SKU del archivo es el último candidato: ya sin el sufijo que puso
-      // Cloudinary (y sin la numeración, si la tratás como foto extra).
-      const sku = list[list.length - 1].code.trim()
+      const { base, sku, photo } = parseName(ph.name, { dropSuffix })
+      // Se busca primero el nombre tal cual y después el SKU ya limpio.
+      const list = [{ code: base }]
+      if (sku !== base) list.push({ code: sku })
       let product = null
-      let via = null
       let skuFix = null // SKU que debería tener el producto según el archivo
 
       for (const c of list) {
@@ -119,7 +121,6 @@ export default function CloudinaryPhotos() {
         const exact = byExact.get(c.code.trim())
         if (exact) {
           product = exact
-          via = c.kind
           break
         }
         // Si aparece ignorando mayúsculas y separadores, es el mismo producto
@@ -127,15 +128,14 @@ export default function CloudinaryPhotos() {
         const soft = byNorm.get(norm(c.code))
         if (soft) {
           product = soft
-          via = c.kind
-          skuFix = c.code.trim()
+          skuFix = sku
           break
         }
       }
 
-      return { ...ph, base, sku, product, via, skuFix, auto: looksAuto(ph.name) }
+      return { ...ph, base, sku, photo, product, skuFix, auto: looksAuto(ph.name) }
     })
-  }, [photos, products, dropSuffix, dropVariant])
+  }, [photos, products, dropSuffix])
 
   const shown = useMemo(() => {
     const s = search.trim().toLowerCase()
@@ -157,33 +157,40 @@ export default function CloudinaryPhotos() {
     const byProduct = new Map()
     const byNewCode = new Map()
 
+    // Las fotos de un mismo SKU van juntas, ordenadas por su número: la .1
+    // (o la que no tiene número) queda de portada.
+    const byNumber = (a, b) => a.photo - b.photo || a.name.localeCompare(b.name)
+
     for (const r of rows) {
       if (!sel[r.publicId]) continue
       if (r.product) {
-        const entry = byProduct.get(r.product.id) || { product: r.product, urls: [], skuFix: null }
-        entry.urls.push(r.url)
+        const entry = byProduct.get(r.product.id) || { product: r.product, fotos: [], skuFix: null }
+        entry.fotos.push(r)
         if (!entry.skuFix && r.skuFix) entry.skuFix = r.skuFix
         byProduct.set(r.product.id, entry)
       } else if (createNew && r.sku) {
         // El nombre del archivo es el SKU (sin el sufijo de Cloudinary).
-        const key = r.sku
-        const entry = byNewCode.get(key) || { code: key, urls: [] }
-        entry.urls.push(r.url)
-        byNewCode.set(key, entry)
+        const entry = byNewCode.get(r.sku) || { code: r.sku, fotos: [] }
+        entry.fotos.push(r)
+        byNewCode.set(r.sku, entry)
       }
     }
 
-    for (const { product, urls, skuFix } of byProduct.values()) {
-      const current = Array.isArray(product.images) ? product.images.filter(Boolean) : []
-      // "Completar" respeta lo que ya está cargado y suma las nuevas al final;
-      // "reemplazar" deja solo las fotos de Cloudinary.
+    for (const { product, fotos, skuFix } of byProduct.values()) {
+      const urls = fotos.sort(byNumber).map((r) => r.url)
+      const stored = Array.isArray(product.images) ? product.images.filter(Boolean) : []
+      // Las páginas del catálogo PDF no cuentan como fotos: se descartan
+      // siempre, aunque estés completando en vez de reemplazando.
+      const current = stored.filter((u) => !isLegacyPhoto(u))
       const base = replace ? [] : current.length ? current : [product.image_url].filter(Boolean)
-      const gallery = [...new Set([...base, ...urls])].slice(0, MAX_GALLERY)
+      const gallery = [...new Set([...base, ...urls])]
+        .filter((u) => !isLegacyPhoto(u))
+        .slice(0, MAX_GALLERY)
       const payload = { image_url: gallery[0], images: gallery }
       if (fixSku && skuFix && skuFix !== product.sku) payload.sku = skuFix
 
       const samePhotos =
-        JSON.stringify(gallery) === JSON.stringify(current) && gallery[0] === product.image_url
+        JSON.stringify(gallery) === JSON.stringify(stored) && gallery[0] === product.image_url
       if (samePhotos && !payload.sku) {
         unchanged++
         continue
@@ -197,8 +204,8 @@ export default function CloudinaryPhotos() {
       })
     }
 
-    for (const { code, urls } of byNewCode.values()) {
-      const gallery = [...new Set(urls)].slice(0, MAX_GALLERY)
+    for (const { code, fotos } of byNewCode.values()) {
+      const gallery = [...new Set(fotos.sort(byNumber).map((r) => r.url))].slice(0, MAX_GALLERY)
       creates.push({
         sku: code,
         name: code,
@@ -218,11 +225,34 @@ export default function CloudinaryPhotos() {
       matched: rows.filter((r) => r.product).length,
       fixables: rows.filter((r) => r.skuFix && r.skuFix !== r.product?.sku).length,
       conSufijo: rows.filter((r) => r.sku !== r.base).length,
+      conNumero: rows.filter((r) => r.photo > 1).length,
+      skus: new Set(rows.map((r) => r.sku)).size,
       nuevos: rows.filter((r) => !r.product && !r.auto).length,
       auto: rows.filter((r) => r.auto).length,
     }),
     [rows]
   )
+
+  // URLs de la carpeta que no tienen código en el nombre: son las subidas
+  // viejas (páginas del PDF que se movieron a Cloudinary o cargas manuales).
+  const unnamedUrls = useMemo(
+    () => new Set(rows.filter((r) => r.auto).map((r) => r.url)),
+    [rows]
+  )
+
+  // Productos que todavía muestran una foto del catálogo en PDF.
+  const legacy = useMemo(() => {
+    const isOld = (u) => isLegacyPhoto(u) || (alsoUnnamed && unnamedUrls.has(u))
+    return products
+      .map((p) => {
+        const stored = Array.isArray(p.images) ? p.images.filter(Boolean) : []
+        const all = stored.length ? stored : [p.image_url].filter(Boolean)
+        if (!all.some(isOld)) return null
+        const images = all.filter((u) => !isOld(u))
+        return { product: p, payload: { image_url: images[0] || null, images } }
+      })
+      .filter(Boolean)
+  }, [products, alsoUnnamed, unnamedUrls])
 
   function toggle(publicId) {
     setSel((prev) => ({ ...prev, [publicId]: !prev[publicId] }))
@@ -247,13 +277,47 @@ export default function CloudinaryPhotos() {
       const res = await api.applyCloudinaryPhotos(plan, (done, t) => setProgress({ done, total: t }))
       setResult(res)
       // Relee los productos para reflejar el estado real tras aplicar.
-      setProducts(await api.listProducts({ includeInactive: 1 }))
+      setProducts(await api.listProducts({ includeInactive: 1, raw: true }))
     } catch (e) {
       setError(e.message)
     } finally {
       setLoading(false)
       setProgress(null)
     }
+  }
+
+  // Saca de los productos las fotos que venían del catálogo en PDF.
+  async function cleanLegacy() {
+    if (legacy.length === 0) return
+    if (
+      !confirm(
+        `Se le van a quitar las fotos del catálogo PDF a ${legacy.length} producto(s). ` +
+          'Los que no tengan otra foto quedan sin foto. ¿Seguir?'
+      )
+    )
+      return
+    setLoading(true)
+    setError('')
+    setResult(null)
+    setProgress({ done: 0, total: legacy.length })
+    const res = { updated: 0, created: 0, errors: [] }
+    for (const { product, payload } of legacy) {
+      try {
+        await api.updateProduct(product.id, payload)
+        res.updated++
+      } catch (e) {
+        res.errors.push(`${product.sku || product.name}: ${e.message}`)
+      }
+      setProgress((p) => ({ ...p, done: p.done + 1 }))
+    }
+    try {
+      setProducts(await api.listProducts({ includeInactive: 1, raw: true }))
+    } catch (e) {
+      setError(e.message)
+    }
+    setResult(res)
+    setLoading(false)
+    setProgress(null)
   }
 
   return (
@@ -313,8 +377,9 @@ export default function CloudinaryPhotos() {
                 checked={replace}
                 onChange={(e) => setReplace(e.target.checked)}
               />
-              Reemplazar las fotos que ya tenga el producto (si no, se agregan a la
-              galería, hasta {MAX_GALLERY})
+              Reemplazar las fotos que ya tenga el producto — la carpeta trae la
+              galería completa (si no, se agregan a lo que ya está, hasta{' '}
+              {MAX_GALLERY})
             </label>
             <label className="row" style={{ gap: 8, textTransform: 'none', marginBottom: 6 }}>
               <input
@@ -337,16 +402,12 @@ export default function CloudinaryPhotos() {
               <code>XBARRAV4_pbgioe</code> → <code>XBARRAV4</code>) — {stats.conSufijo}{' '}
               archivo(s) lo tienen
             </label>
-            <label className="row" style={{ gap: 8, textTransform: 'none', marginBottom: 6 }}>
-              <input
-                type="checkbox"
-                style={{ width: 'auto' }}
-                checked={dropVariant}
-                onChange={(e) => setDropVariant(e.target.checked)}
-              />
-              Tratar <code>ACC-001-2</code> como foto extra de <code>ACC-001</code> (si
-              no, es un SKU distinto)
-            </label>
+            <p className="muted" style={{ margin: '0 0 6px' }}>
+              Las fotos de un mismo producto se agrupan por la numeración del
+              archivo: <code>STEP2</code>, <code>STEP2.2</code>, <code>STEP2.3</code>{' '}
+              van al mismo SKU y en ese orden ({stats.conNumero} archivo(s)
+              numerado(s), {stats.skus} SKU distintos).
+            </p>
             <label className="row" style={{ gap: 8, textTransform: 'none', marginBottom: 6 }}>
               <input
                 type="checkbox"
@@ -429,9 +490,9 @@ export default function CloudinaryPhotos() {
                     </td>
                     <td>
                       <span className="product-sku">{r.name}</span>
-                      {r.via === 'variante' && (
-                        <span className="badge badge-off" style={{ marginLeft: 6 }}>
-                          foto extra
+                      {r.photo > 1 && (
+                        <span className="badge badge-cat" style={{ marginLeft: 6 }}>
+                          foto {r.photo}
                         </span>
                       )}
                       {r.auto && (
@@ -469,7 +530,11 @@ export default function CloudinaryPhotos() {
                         <span className="muted">Se omite</span>
                       ) : r.product ? (
                         <span className="badge badge-cat">
-                          {r.product.image_url && !replace ? 'Suma a galería' : 'Pone la foto'}
+                          {!replace && r.product.image_url
+                            ? 'Suma a galería'
+                            : r.photo > 1
+                              ? `Foto ${r.photo}`
+                              : 'Portada'}
                         </span>
                       ) : createNew ? (
                         <span className="badge badge-cat">Crea producto</span>
@@ -496,6 +561,42 @@ export default function CloudinaryPhotos() {
             {plan.unchanged > 0 && (
               <span className="muted">{plan.unchanged} ya estaban al día</span>
             )}
+          </div>
+
+          <div
+            className="card"
+            style={{ padding: '1.25rem', margin: '1.5rem 0', maxWidth: 720 }}
+          >
+            <strong style={{ display: 'block', marginBottom: '0.5rem' }}>
+              Fotos viejas del catálogo PDF
+            </strong>
+            <p className="muted" style={{ marginTop: 0 }}>
+              Las páginas del catálogo en PDF ya no se usan como foto de producto
+              y no se muestran en la tienda. Acá se las sacás también de la base.
+              Conviene hacerlo <strong>después</strong> de aplicar las fotos de
+              Cloudinary: el producto que no tenga otra foto queda sin foto.
+            </p>
+            <label className="row" style={{ gap: 8, textTransform: 'none', marginBottom: 10 }}>
+              <input
+                type="checkbox"
+                style={{ width: 'auto' }}
+                checked={alsoUnnamed}
+                onChange={(e) => setAlsoUnnamed(e.target.checked)}
+              />
+              Incluir también las {stats.auto} foto(s) sin código de la carpeta
+              (páginas del PDF que se movieron a Cloudinary y cargas manuales
+              viejas)
+            </label>
+            <button
+              className="btn btn-danger"
+              onClick={cleanLegacy}
+              disabled={loading || legacy.length === 0}
+            >
+              <Icon name="trash" size={15} />{' '}
+              {legacy.length === 0
+                ? 'No quedan fotos del PDF'
+                : `Quitar de ${legacy.length} producto(s)`}
+            </button>
           </div>
         </>
       )}

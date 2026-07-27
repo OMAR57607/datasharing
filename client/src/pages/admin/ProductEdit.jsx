@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../../api.js'
-import ImagePicker from '../../components/ImagePicker.jsx'
 import Icon from '../../components/Icon.jsx'
 import { parseVehicle, normalizeMake } from '../../lib/vehicles.js'
 
@@ -34,7 +33,6 @@ export default function ProductEdit() {
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [pickerOpen, setPickerOpen] = useState(false)
 
   // ---- Galería (hasta 4 fotos) ----
   function addImage(url) {
@@ -118,10 +116,7 @@ export default function ProductEdit() {
     setError('')
     setSaving(true)
     try {
-      // Las fotos del catálogo del repo se suben a Cloudinary; las demás se dejan igual.
-      const images = (
-        await Promise.all(form.images.map((u) => api.cloudinaryFromRepo(u)))
-      ).filter(Boolean)
+      const images = form.images.filter(Boolean)
       const payload = {
         ...form,
         images,
@@ -236,14 +231,7 @@ export default function ProductEdit() {
 
           {form.images.length < MAX_IMAGES ? (
             <div className="row" style={{ gap: 10, marginTop: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="btn btn-ice btn-sm"
-                onClick={() => setPickerOpen(true)}
-              >
-                <Icon name="image" size={15} /> Del catálogo
-              </button>
-              <label className="btn btn-ghost btn-sm" style={{ cursor: uploading ? 'default' : 'pointer' }}>
+              <label className="btn btn-ice btn-sm" style={{ cursor: uploading ? 'default' : 'pointer' }}>
                 <Icon name="upload" size={15} /> Subir archivo
                 <input
                   type="file"
@@ -263,12 +251,6 @@ export default function ProductEdit() {
           )}
         </div>
 
-        <ImagePicker
-          open={pickerOpen}
-          label={form.name}
-          onClose={() => setPickerOpen(false)}
-          onSelect={(url) => addImage(url)}
-        />
 
         <h3 className="field-group-title">Ficha técnica</h3>
 

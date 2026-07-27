@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../api.js'
-import ImagePicker from '../../components/ImagePicker.jsx'
 import Icon from '../../components/Icon.jsx'
 
 export default function AssignPhotos() {
@@ -9,7 +8,6 @@ export default function AssignPhotos() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [onlyMissing, setOnlyMissing] = useState(true)
-  const [pickerFor, setPickerFor] = useState(null) // producto con el selector abierto
   const [savingId, setSavingId] = useState(null)
   // Productos a los que se les asignó foto en esta sesión: se mantienen
   // visibles (con etiqueta) aunque el filtro "solo sin foto" esté activo.
@@ -44,21 +42,6 @@ export default function AssignPhotos() {
   }
 
   const missingCount = products.filter((p) => !p.image_url).length
-
-  async function assign(product, repoUrl) {
-    setSavingId(product.id)
-    setError('')
-    try {
-      const image_url = await api.cloudinaryFromRepo(repoUrl)
-      const updated = await api.updateProduct(product.id, { image_url, images: [image_url] })
-      setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)))
-      markDone(product.id)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setSavingId(null)
-    }
-  }
 
   async function uploadFromDevice(product, file) {
     setSavingId(product.id)
@@ -133,21 +116,14 @@ export default function AssignPhotos() {
                 <strong title={p.name}>{p.name}</strong>
                 {p.sku && <span className="product-sku">{p.sku}</span>}
                 <div className="row assign-actions" style={{ gap: 6 }}>
-                  <button
-                    className="btn btn-ice btn-sm"
-                    disabled={savingId === p.id}
-                    onClick={() => setPickerFor(p)}
-                  >
-                    <Icon name="image" size={15} /> {p.image_url ? 'Cambiar' : 'Catálogo'}
-                  </button>
                   <label
-                    className="btn btn-ghost btn-sm"
+                    className="btn btn-ice btn-sm"
                     style={{
                       cursor: savingId === p.id ? 'default' : 'pointer',
                       opacity: savingId === p.id ? 0.6 : 1,
                     }}
                   >
-                    <Icon name="upload" size={15} /> Subir
+                    <Icon name="upload" size={15} /> {p.image_url ? 'Cambiar' : 'Subir'}
                     <input
                       type="file"
                       accept="image/png,image/jpeg"
@@ -167,14 +143,6 @@ export default function AssignPhotos() {
         </div>
       )}
 
-      <ImagePicker
-        open={pickerFor !== null}
-        label={pickerFor?.name}
-        onClose={() => setPickerFor(null)}
-        onSelect={(url) => {
-          if (pickerFor) assign(pickerFor, url)
-        }}
-      />
     </>
   )
 }
