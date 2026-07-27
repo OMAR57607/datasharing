@@ -15,6 +15,7 @@ export default function Dashboard() {
   const total = products.length
   const withPrice = products.filter((p) => p.current_price != null).length
   const withoutPrice = total - withPrice
+  const withoutPhoto = products.filter((p) => !p.image_url).length
   const categories = new Set(
     products.map((p) => p.category).filter(Boolean)
   ).size
@@ -46,6 +47,12 @@ export default function Dashboard() {
           <div className="lbl">Sin precio</div>
         </div>
         <div className="stat">
+          <div className="num" style={{ color: 'var(--text-faint)' }}>
+            {withoutPhoto}
+          </div>
+          <div className="lbl">Sin foto</div>
+        </div>
+        <div className="stat">
           <div className="num" style={{ color: 'var(--blue-2)' }}>
             {categories}
           </div>
@@ -59,17 +66,26 @@ export default function Dashboard() {
           <Link to="/admin/productos" className="btn btn-ghost btn-sm">
             Gestionar productos
           </Link>
-          <Link to="/admin/importar" className="btn btn-ghost btn-sm">
-            Importar desde PDF
+          <Link to="/admin/cloudinary" className="btn btn-ghost btn-sm">
+            Cargar fotos
           </Link>
           <Link to="/admin/precios" className="btn btn-ghost btn-sm">
             Cargar precios
           </Link>
         </div>
-        {withoutPrice > 0 && (
+        {(withoutPrice > 0 || withoutPhoto > 0) && (
           <p className="muted" style={{ marginTop: '1rem' }}>
-            Tenés <strong>{withoutPrice}</strong> producto(s) sin precio. Usá la
-            sección de carga de precios para completarlos.
+            {withoutPrice > 0 && (
+              <>
+                Tenés <strong>{withoutPrice}</strong> producto(s) sin precio.{' '}
+              </>
+            )}
+            {withoutPhoto > 0 && (
+              <>
+                <strong>{withoutPhoto}</strong> siguen sin foto: cargalas en lote
+                desde <em>Fotos de Cloudinary</em>.
+              </>
+            )}
           </p>
         )}
       </div>

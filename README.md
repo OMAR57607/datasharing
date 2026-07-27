@@ -1,7 +1,7 @@
 # Nitro Garage 🔧🔥
 
 Tienda web de **accesorios automotrices** con panel de administración,
-importación de productos desde PDF y gestión de precios e imágenes.
+carga masiva de fotos desde Cloudinary y gestión de precios.
 
 **Stack:** React + Vite · **Supabase** (Postgres + Auth) · **Cloudinary**
 (imágenes) · **Vercel** (deploy, con Serverless Functions) · **pnpm**.
@@ -13,17 +13,16 @@ importación de productos desde PDF y gestión de precios e imágenes.
 │  Cliente     │──────────────────────▶│  Supabase       │
 │  React+Vite  │   auth + CRUD         │  Postgres+Auth  │
 │  (Vercel)    │                       └─────────────────┘
-│              │   /api/import                ▲
 │              │   /api/upload  ┌─────────────┴───────┐
 │              │───────────────▶│ Vercel Functions    │
-└──────────────┘                │  · PDF → texto      │
-                                │  · fotos ───────────┼──▶ Cloudinary
+└──────────────┘                │  · sube fotos       │
+                                │  · lee la carpeta ──┼──▶ Cloudinary
                                 └─────────────────────┘
 ```
 
 - El **cliente habla directo con Supabase** (protegido por Row Level Security).
-- Las **Vercel Functions** son mínimas: solo procesan el PDF y suben a
-  Cloudinary (operaciones que requieren secretos del servidor).
+- Las **Vercel Functions** son mínimas: suben fotos y leen el Media Library
+  (lo único que necesita los secretos de Cloudinary).
 
 ## Módulos
 
@@ -31,7 +30,6 @@ importación de productos desde PDF y gestión de precios e imágenes.
 | --- | --- |
 | **Tienda pública** | Landing de marca, catálogo con filtros y detalle de producto. |
 | **Panel admin** | Login con Supabase Auth, dashboard, CRUD de productos. |
-| **Importador de PDF** | Extrae los productos del PDF (texto): nombre, SKU y categoría, sin precio ni foto. |
 | **Precios** | Carga individual o masiva por SKU, con historial (RPC `set_price`). |
 | **Imágenes** | Subida manual por producto a Cloudinary, hasta 4 fotos por SKU. |
 | **Fotos desde Cloudinary** | Lee una carpeta del Media Library y asigna cada imagen al producto cuyo SKU es el nombre del archivo (o lo crea). |
@@ -51,7 +49,8 @@ importación de productos desde PDF y gestión de precios e imágenes.
 
 ### 3. Cloudinary
 - Tomá `cloud name`, `api key` y `api secret` del dashboard.
-- (El plan gratuito permite convertir PDF a imágenes por página.)
+- Subí las fotos a una carpeta (por defecto `nitro-garage/productos`) usando el
+  SKU como nombre de archivo.
 
 ### 4. Variables de entorno
 Copiá los ejemplos y completá:
@@ -93,12 +92,11 @@ pnpm dev:client
 │   └── src/
 │       ├── lib/supabase.js  # cliente supabase-js
 │       ├── lib/photos.js    # descarta las fotos viejas del catálogo PDF
-│       ├── api.js           # CRUD (Supabase) + PDF/fotos (Functions)
+│       ├── api.js           # CRUD (Supabase) + fotos (Functions)
 │       ├── context/         # Supabase Auth
-│       ├── components/      # layout, tarjetas, ruta protegida
+│       ├── components/      # layout, tarjetas, esqueletos, ruta protegida
 │       └── pages/           # tienda pública + panel admin
 ├── api/                    # Vercel Serverless Functions
-│   ├── import.js            # PDF → productos (solo texto)
 │   ├── upload.js            # imagen de producto → Cloudinary
 │   ├── cloudinary-photos.js # lista una carpeta del Media Library
 │   └── _lib/                # pdf, cloudinary, multipart, auth
@@ -106,6 +104,21 @@ pnpm dev:client
 ├── vercel.json             # build + rutas + funciones
 └── pnpm-workspace.yaml
 ```
+
+## Panel de administración
+
+| Sección | Para qué |
+| --- | --- |
+| **Dashboard** | Totales: productos, con y sin precio, sin foto, categorías. |
+| **Productos** | ABM completo, con filtros por sin precio / sin foto / inactivos y carga rápida de precio. |
+| **Fotos de Cloudinary** | Carga masiva de fotos por SKU y limpieza del catálogo viejo. |
+| **Carga de precios** | Pegar `SKU precio` en lote. |
+| **Armar cotización** / **Cotizaciones** | Armado asistido y seguimiento de los pedidos. |
+
+Se quitaron dos secciones que quedaron sin función cuando las fotos pasaron a
+salir de Cloudinary: *Importar PDF* (los productos del catálogo viejo no
+servían) y *Asignar fotos* (la carga por producto ya está dentro de la ficha, y
+la masiva en Fotos de Cloudinary).
 
 ## Cargar fotos que ya están en Cloudinary
 
@@ -171,6 +184,6 @@ el SKU como nombre de archivo.
 - Para sacarlas de la base hay un botón al final de **Fotos de Cloudinary**.
   Conviene usarlo *después* de aplicar las fotos nuevas: el producto que no tenga
   otra foto queda sin foto.
-- Los archivos del repo (`client/public/productos/`) y el selector de páginas se
-  eliminaron. El PDF del catálogo sigue en `client/public/catalogos/` porque de
-  ahí se extraen los productos por texto.
+- Se eliminaron los archivos del repo (`client/public/productos/`), el selector
+  de páginas, el importador de PDF y el propio catálogo en PDF (23 MB). Todo eso
+  sigue en el historial de git si alguna vez hiciera falta.

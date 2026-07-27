@@ -25,14 +25,9 @@ export default function AdminLayout() {
           <NavLink to="/admin" end>
             <Icon name="grid" size={18} /> Dashboard
           </NavLink>
+          <span className="nav-group">Catálogo</span>
           <NavLink to="/admin/productos">
             <Icon name="package" size={18} /> Productos
-          </NavLink>
-          <NavLink to="/admin/importar">
-            <Icon name="file-text" size={18} /> Importar PDF
-          </NavLink>
-          <NavLink to="/admin/fotos">
-            <Icon name="image" size={18} /> Asignar fotos
           </NavLink>
           <NavLink to="/admin/cloudinary">
             <Icon name="cloud" size={18} /> Fotos de Cloudinary
@@ -40,6 +35,7 @@ export default function AdminLayout() {
           <NavLink to="/admin/precios">
             <Icon name="tag" size={18} /> Carga de precios
           </NavLink>
+          <span className="nav-group">Ventas</span>
           <NavLink to="/admin/cotizador">
             <Icon name="edit" size={18} /> Armar cotización
           </NavLink>
