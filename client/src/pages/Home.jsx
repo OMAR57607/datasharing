@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
+import { ProductGridSkeleton } from '../components/Skeleton.jsx'
 import { makeOf } from '../lib/vehicles.js'
 import HeroFX from '../components/HeroFX.jsx'
 import Icon from '../components/Icon.jsx'
@@ -179,12 +180,15 @@ export default function Home() {
             </Link>
           </div>
           {loading ? (
-            <div className="loading">Cargando…</div>
+            <ProductGridSkeleton count={3} />
           ) : mostRequested.length === 0 ? (
-            <p className="muted">
-              Aún no hay productos cargados. Ingresá al panel admin para
-              agregarlos.
-            </p>
+            <div className="empty-state">
+              <div className="empty-ico">
+                <Icon name="package" size={34} />
+              </div>
+              <h3>Todavía no hay productos</h3>
+              <p>Cargalos desde el panel de administración.</p>
+            </div>
           ) : (
             <div className="product-grid" ref={gridRef}>
               {mostRequested.map((p) => (

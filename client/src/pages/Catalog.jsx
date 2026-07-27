@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api.js'
 import ProductCard from '../components/ProductCard.jsx'
+import { ProductGridSkeleton } from '../components/Skeleton.jsx'
+import Icon from '../components/Icon.jsx'
 import Pagination from '../components/Pagination.jsx'
 import { vehicleOf, matchesYear } from '../lib/vehicles.js'
 import { useSeo } from '../lib/useSeo.js'
@@ -207,13 +209,22 @@ export default function Catalog() {
 
           <div>
             {loading ? (
-              <div className="loading">Cargando productos…</div>
+              <ProductGridSkeleton count={9} />
             ) : results.length === 0 ? (
               <div className="empty-state">
-                <p>No encontramos productos con esos filtros.</p>
-                <button className="btn btn-ghost btn-sm" onClick={clearAll}>
-                  Limpiar filtros
-                </button>
+                <div className="empty-ico">
+                  <Icon name="search" size={34} />
+                </div>
+                <h3>Sin resultados</h3>
+                <p>
+                  No encontramos accesorios con esos filtros. Probá con menos
+                  filtros o buscá por número de parte.
+                </p>
+                <div className="row">
+                  <button className="btn btn-primary btn-sm" onClick={clearAll}>
+                    Limpiar filtros
+                  </button>
+                </div>
               </div>
             ) : (
               <>

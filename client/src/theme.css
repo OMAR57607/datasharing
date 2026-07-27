@@ -24,6 +24,9 @@
   --grad-ice: linear-gradient(100deg, #00a3ff, #12c2ff);
   --grad-brand: linear-gradient(100deg, #ff5a00 0%, #ffb400 45%, #00a3ff 100%);
 
+  /* Fondo de las fotos de producto (vienen recortadas sobre blanco). */
+  --photo-bg: #ffffff;
+
   --radius: 12px;
   --radius-sm: 8px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
@@ -373,4 +376,15 @@ th {
   text-transform: uppercase;
   font-size: 0.72rem;
   letter-spacing: 0.5px;
+}
+
+/* ===== Accesibilidad: foco visible al navegar con teclado ===== */
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* El navegador ya no dibuja el foco por hover/click de mouse. */
+:focus:not(:focus-visible) {
+  outline: none;
 }
