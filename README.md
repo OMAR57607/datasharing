@@ -17,7 +17,7 @@ importación de productos desde PDF y gestión de precios e imágenes.
 │              │   /api/upload  ┌─────────────┴───────┐
 │              │───────────────▶│ Vercel Functions    │
 └──────────────┘                │  · PDF → texto      │
-                                │  · PDF/imgs → ──────┼──▶ Cloudinary
+                                │  · fotos ───────────┼──▶ Cloudinary
                                 └─────────────────────┘
 ```
 
@@ -31,9 +31,9 @@ importación de productos desde PDF y gestión de precios e imágenes.
 | --- | --- |
 | **Tienda pública** | Landing de marca, catálogo con filtros y detalle de producto. |
 | **Panel admin** | Login con Supabase Auth, dashboard, CRUD de productos. |
-| **Importador de PDF** | Extrae productos del PDF (texto) y sube cada página como imagen a Cloudinary para asignarla. |
+| **Importador de PDF** | Extrae los productos del PDF (texto): nombre, SKU y categoría, sin precio ni foto. |
 | **Precios** | Carga individual o masiva por SKU, con historial (RPC `set_price`). |
-| **Imágenes** | Subida manual por producto a Cloudinary o asignación de páginas del catálogo. |
+| **Imágenes** | Subida manual por producto a Cloudinary, hasta 4 fotos por SKU. |
 | **Fotos desde Cloudinary** | Lee una carpeta del Media Library y asigna cada imagen al producto cuyo SKU es el nombre del archivo (o lo crea). |
 
 ## Puesta en marcha
@@ -92,12 +92,13 @@ pnpm dev:client
 ├── client/                 # Frontend React + Vite
 │   └── src/
 │       ├── lib/supabase.js  # cliente supabase-js
-│       ├── api.js           # CRUD (Supabase) + PDF/imágenes (Functions)
+│       ├── lib/photos.js    # descarta las fotos viejas del catálogo PDF
+│       ├── api.js           # CRUD (Supabase) + PDF/fotos (Functions)
 │       ├── context/         # Supabase Auth
 │       ├── components/      # layout, tarjetas, ruta protegida
 │       └── pages/           # tienda pública + panel admin
 ├── api/                    # Vercel Serverless Functions
-│   ├── import.js            # PDF → productos + páginas a Cloudinary
+│   ├── import.js            # PDF → productos (solo texto)
 │   ├── upload.js            # imagen de producto → Cloudinary
 │   ├── cloudinary-photos.js # lista una carpeta del Media Library
 │   └── _lib/                # pdf, cloudinary, multipart, auth
@@ -122,24 +123,36 @@ volver a subirlas una por una: entrá a **Admin → Fotos de Cloudinary**.
    código como SKU y nombre, inactivos salvo que marques lo contrario).
 4. Revisás la tabla, desmarcás lo que no quieras y tocás **Aplicar**.
 
-Dos casos de nombres tienen su propio interruptor:
+### Varias fotos del mismo producto
 
-- **Sufijo de Cloudinary** (`XBARRAV4_pbgioe` → SKU `XBARRAV4`): son 6 caracteres
-  en minúscula que agrega Cloudinary al subir, no forman parte del SKU. Se ignora
-  por defecto, tanto para buscar el producto como para darlo de alta. Un SKU que
-  de verdad termine así (`KIT_ABC123`) no se toca: el sufijo real siempre viene
-  en minúscula.
-- **Numeración de fotos extra** (`ACC-001-2`, `ACC-001 (1)`): viene **desactivado**,
-  porque si el nombre es el SKU entonces `ACC-001-2` es otro producto. Activalo
-  solo si numeraste a mano las fotos de un mismo código.
-
+Numerá los archivos con un punto: `STEP2`, `STEP2.2`, `STEP2.3` van todos al SKU
+`STEP2`, en ese orden, y el que no tiene número (o el `.1`) queda de portada.
 Cada producto guarda hasta 4 fotos (`images`); la primera es la portada
-(`image_url`). No hacen falta variables de entorno nuevas: se usan las
-credenciales de Cloudinary que ya están configuradas.
+(`image_url`).
 
-## Nota sobre las imágenes del catálogo
-Los catálogos gráficos tienen **cada página como una sola imagen compuesta**
-(varios productos dibujados dentro), por lo que **no** es posible recortar de
-forma fiable la imagen de cada producto por separado. Por eso el flujo sube el
-PDF a Cloudinary —que genera una imagen por página— y el admin **asigna la
-página** a cada producto, o sube una imagen propia. Los precios se cargan aparte.
+### El sufijo que agrega Cloudinary
+
+Cloudinary le suma un sufijo aleatorio de 6 caracteres en minúscula a los
+archivos que subís: `XBARRAV4_pbgioe` es el SKU `XBARRAV4`, y `STEP2.2_huvrdu`
+es la foto 2 de `STEP2`. Se ignora por defecto, tanto para encontrar el producto
+como para darlo de alta. Un SKU que de verdad termine parecido (`KIT_ABC123`) no
+se toca, porque el sufijo real siempre viene en minúscula.
+
+No hacen falta variables de entorno nuevas: se usan las credenciales de
+Cloudinary que ya están configuradas.
+
+## Las fotos viejas del catálogo en PDF
+
+Antes cada página del PDF se subía como imagen y el admin le asignaba una página
+a cada producto. Eso quedó sin efecto: **las fotos salen del Media Library**, con
+el SKU como nombre de archivo.
+
+- Las páginas del catálogo (`/productos/pagXX_YYY.jpg` y la carpeta
+  `nitro-garage/catalogos` de Cloudinary) **no se muestran** aunque sigan
+  guardadas en un producto: `client/src/lib/photos.js` las descarta al leer.
+- Para sacarlas de la base hay un botón al final de **Fotos de Cloudinary**.
+  Conviene usarlo *después* de aplicar las fotos nuevas: el producto que no tenga
+  otra foto queda sin foto.
+- Los archivos del repo (`client/public/productos/`) y el selector de páginas se
+  eliminaron. El PDF del catálogo sigue en `client/public/catalogos/` porque de
+  ahí se extraen los productos por texto.

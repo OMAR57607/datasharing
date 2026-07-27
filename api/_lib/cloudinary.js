@@ -113,16 +113,4 @@ export async function listFolderImages(folder, { max = 1000 } = {}) {
   return { source: 'empty', photos: [] }
 }
 
-/**
- * URL de una página del PDF como imagen (Cloudinary convierte el PDF
- * a imágenes por página de forma nativa).
- */
-export function pdfPageUrl(publicId, page, { width = 800 } = {}) {
-  return cloudinary.url(publicId, {
-    resource_type: 'image',
-    format: 'jpg',
-    transformation: [{ page }, { width, crop: 'fit', quality: 'auto' }],
-  })
-}
-
 export { cloudinary }

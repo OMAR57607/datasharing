@@ -1,4 +1,5 @@
 import { supabase } from './lib/supabase.js'
+import { cleanPhotos } from './lib/photos.js'
 
 // Token de sesión actual para llamar a las Vercel Functions.
 async function authHeader() {
@@ -39,20 +40,22 @@ export const api = {
   },
 
   // ---------- Productos (Supabase directo, protegido por RLS) ----------
-  async listProducts({ category, search, includeInactive } = {}) {
+  // `raw` devuelve los productos tal cual están en la base, con las fotos
+  // viejas del catálogo PDF incluidas: solo lo usa el panel que las limpia.
+  async listProducts({ category, search, includeInactive, raw } = {}) {
     let q = supabase.from('products').select('*').order('created_at', { ascending: false })
     if (!includeInactive) q = q.eq('active', true)
     if (category) q = q.eq('category', category)
     if (search) q = q.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`)
     const { data, error } = await q
     throwIf(error)
-    return data
+    return raw ? data : data.map(cleanPhotos)
   },
 
   async getProduct(id) {
     const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
     throwIf(error)
-    return data
+    return cleanPhotos(data)
   },
 
   // Cuenta una "solicitud" (vista) del producto para el ranking de más
@@ -201,18 +204,14 @@ export const api = {
       toInsert.push(p)
     }
     if (toInsert.length) {
-      // Sube a Cloudinary las fotos del catálogo elegidas antes de guardar.
-      const rows = []
-      for (const p of toInsert) {
-        rows.push({
-          sku: p.sku || null,
-          name: p.name,
-          description: p.description || null,
-          category: p.category || null,
-          brand: p.brand || null,
-          image_url: (await api.cloudinaryFromRepo(p.image_url)) || null,
-        })
-      }
+      // Sin fotos: las carga después "Fotos desde Cloudinary" cruzando por SKU.
+      const rows = toInsert.map((p) => ({
+        sku: p.sku || null,
+        name: p.name,
+        description: p.description || null,
+        category: p.category || null,
+        brand: p.brand || null,
+      }))
       const { error } = await supabase.from('products').insert(rows)
       throwIf(error)
     }
@@ -285,24 +284,4 @@ export const api = {
     return data
   },
 
-  // Mueve una foto del catálogo del repo (/productos/...) a Cloudinary y
-  // devuelve la URL de Cloudinary. Las URLs que ya son de Cloudinary o
-  // externas se devuelven sin cambios. Si Cloudinary falla, se conserva la
-  // ruta del repo (la imagen sigue funcionando servida desde el sitio).
-  async cloudinaryFromRepo(imageUrl) {
-    if (!imageUrl || !imageUrl.startsWith('/productos/')) return imageUrl
-    try {
-      const absolute = window.location.origin + imageUrl
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { ...(await authHeader()), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: absolute }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Error al subir a Cloudinary')
-      return data.url
-    } catch {
-      return imageUrl
-    }
-  },
 }
