@@ -84,6 +84,28 @@ pnpm dev:client
 3. Deploy. La build corre `pnpm --filter nitro-garage-client build` y publica
    `client/dist`; las funciones de `api/` se despliegan como Serverless Functions.
 
+> **Si tocás las dependencias, regenerá el lockfile.** Vercel instala con
+> `pnpm install --frozen-lockfile`: si `package.json` y `pnpm-lock.yaml` no
+> coinciden, el deploy corta con `ERR_PNPM_OUTDATED_LOCKFILE` y el sitio se
+> queda sirviendo la build anterior (sin avisar en la web). Después de agregar
+> o quitar un paquete, corré `pnpm install --lockfile-only` y commiteá el
+> lockfile. El CI verifica exactamente esto.
+
+## Integración continua
+
+`.github/workflows/ci.yml` corre en cada push a `master` y en cada pull request,
+reproduciendo lo que hace Vercel para que un error de build no aparezca recién
+en producción:
+
+| Paso | Qué cubre |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | Que el lockfile esté al día con `package.json`. |
+| `node --check` sobre `api/**/*.js` | Sintaxis de las Functions, que no pasan por el bundler. |
+| `pnpm --filter nitro-garage-client build` | Que el cliente compile (imports rotos, JSX inválido). |
+
+No hay suite de tests: el proyecto no tiene runner configurado, así que el CI
+verifica que todo instale y compile, no el comportamiento.
+
 ## Estructura
 
 ```
@@ -94,13 +116,14 @@ pnpm dev:client
 │       ├── lib/photos.js    # descarta las fotos viejas del catálogo PDF
 │       ├── api.js           # CRUD (Supabase) + fotos (Functions)
 │       ├── context/         # Supabase Auth
-│       ├── components/      # layout, tarjetas, esqueletos, ruta protegida
+│       ├── components/      # layout, tarjetas, esqueletos, selector de portada
 │       └── pages/           # tienda pública + panel admin
 ├── api/                    # Vercel Serverless Functions
 │   ├── upload.js            # imagen de producto → Cloudinary
 │   ├── cloudinary-photos.js # lista una carpeta del Media Library
-│   └── _lib/                # pdf, cloudinary, multipart, auth
-├── supabase/schema.sql     # tablas + RLS + RPC
+│   └── _lib/                # cloudinary, multipart, auth
+├── supabase/               # schema.sql + migraciones (SQL Editor)
+├── .github/workflows/ci.yml # instala y compila en cada PR
 ├── vercel.json             # build + rutas + funciones
 └── pnpm-workspace.yaml
 ```
@@ -154,6 +177,19 @@ se toca, porque el sufijo real siempre viene en minúscula.
 No hacen falta variables de entorno nuevas: se usan las credenciales de
 Cloudinary que ya están configuradas.
 
+### Elegir la portada de un producto
+
+La portada es la primera foto de `images` (y se copia en `image_url` por
+compatibilidad). Se puede cambiar de dos formas:
+
+- **Productos** → la miniatura de los que tienen más de una foto muestra el
+  contador y abre un selector: tocás la que quieras y pasa a ser la portada.
+- **Ficha del producto** → botón *Portada* sobre cada foto de la galería.
+
+En la carga masiva la portada sale de la numeración del archivo (`STEP2` o
+`STEP2.1` antes que `STEP2.2`), así que el selector sirve para corregir casos
+puntuales sin volver a subir nada.
+
 ## Dar de baja lo que quedó del catálogo viejo
 
 Si la carpeta de Cloudinary es el catálogo curado, todo producto cuyo SKU no
@@ -187,3 +223,37 @@ el SKU como nombre de archivo.
 - Se eliminaron los archivos del repo (`client/public/productos/`), el selector
   de páginas, el importador de PDF y el propio catálogo en PDF (23 MB). Todo eso
   sigue en el historial de git si alguna vez hiciera falta.
+
+## API (Vercel Functions)
+
+Las dos requieren sesión de admin: mandan `Authorization: Bearer <token>` de
+Supabase y la Function lo valida con `api/_lib/auth.js`. Son las únicas
+operaciones que necesitan los secretos de Cloudinary.
+
+| Endpoint | Método | Cuerpo / parámetros | Devuelve |
+| --- | --- | --- | --- |
+| `/api/upload` | POST | `multipart/form-data` con el archivo, o JSON `{ url }` | `{ url, publicId }` |
+| `/api/cloudinary-photos` | GET | `?folder=nitro-garage/productos` | `{ folder, source, count, photos[] }` |
+
+`cloudinary-photos` valida el nombre de carpeta y prueba tres formas de
+consultarla (Search API por `folder`, por `asset_folder`, y Admin API por
+prefijo), porque Cloudinary tiene dos modos de carpeta según la cuenta. Cada
+foto viene como `{ publicId, name, url, format, bytes, width, height }`, donde
+`name` es el nombre del archivo: el SKU.
+
+## Datos
+
+Todo el CRUD lo hace el cliente contra Supabase, protegido por Row Level
+Security: lectura pública solo de `active = true`, escritura solo autenticado.
+
+| Tabla | Para qué |
+| --- | --- |
+| `products` | Catálogo. `images` (jsonb) es la galería de hasta 4 fotos; `image_url` es la portada. `sku` es único. |
+| `price_history` | Historial de precios. `on delete cascade`: borrar un producto borra su historial. |
+| `quotes` | Cotizaciones. `items` (jsonb) guarda una copia de cada ítem, **sin** clave foránea a `products`: por eso borrar productos no afecta las cotizaciones ya emitidas. |
+
+RPC: `set_price` (precio + historial, atómico) e `increment_product_views`
+(cuenta solicitudes desde el público, con `security definer`).
+
+Las migraciones están en `supabase/`, para correr una sola vez en el SQL Editor
+sobre el esquema ya creado.

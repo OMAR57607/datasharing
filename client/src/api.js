@@ -94,6 +94,15 @@ export const api = {
     return data
   },
 
+  // La portada es la primera foto de `images` (y se copia en image_url por
+  // compatibilidad): elegirla es reordenar la galería.
+  async setCover(product, url) {
+    const rest = (Array.isArray(product.images) ? product.images : []).filter(
+      (u) => u && u !== url
+    )
+    return api.updateProduct(product.id, { image_url: url, images: [url, ...rest] })
+  },
+
   async deleteProduct(id) {
     const { error } = await supabase.from('products').delete().eq('id', id)
     throwIf(error)

@@ -1,0 +1,39 @@
+name: CI
+
+# Reproduce lo que hace Vercel al desplegar, para que un error de build no
+# aparezca recién en producción.
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    name: Instalar y compilar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # La versión de pnpm sale de "packageManager" en package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Mismo comando que corre Vercel: falla si pnpm-lock.yaml quedó
+      # desactualizado respecto de package.json (ERR_PNPM_OUTDATED_LOCKFILE).
+      - name: Instalar dependencias (lockfile congelado)
+        run: pnpm install --frozen-lockfile
+
+      # Las Functions no pasan por el bundler, así que se revisan aparte.
+      - name: Revisar la sintaxis de las Vercel Functions
+        run: |
+          for f in api/*.js api/_lib/*.js; do
+            echo "· $f"
+            node --check "$f"
+          done
+
+      - name: Compilar el cliente
+        run: pnpm --filter nitro-garage-client build
