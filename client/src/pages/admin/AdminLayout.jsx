@@ -34,6 +34,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/fotos">
             <Icon name="image" size={18} /> Asignar fotos
           </NavLink>
+          <NavLink to="/admin/cloudinary">
+            <Icon name="cloud" size={18} /> Fotos de Cloudinary
+          </NavLink>
           <NavLink to="/admin/precios">
             <Icon name="tag" size={18} /> Carga de precios
           </NavLink>

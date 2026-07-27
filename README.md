@@ -34,6 +34,7 @@ importación de productos desde PDF y gestión de precios e imágenes.
 | **Importador de PDF** | Extrae productos del PDF (texto) y sube cada página como imagen a Cloudinary para asignarla. |
 | **Precios** | Carga individual o masiva por SKU, con historial (RPC `set_price`). |
 | **Imágenes** | Subida manual por producto a Cloudinary o asignación de páginas del catálogo. |
+| **Fotos desde Cloudinary** | Lee una carpeta del Media Library y asigna cada imagen al producto cuyo SKU es el nombre del archivo (o lo crea). |
 
 ## Puesta en marcha
 
@@ -98,11 +99,32 @@ pnpm dev:client
 ├── api/                    # Vercel Serverless Functions
 │   ├── import.js            # PDF → productos + páginas a Cloudinary
 │   ├── upload.js            # imagen de producto → Cloudinary
+│   ├── cloudinary-photos.js # lista una carpeta del Media Library
 │   └── _lib/                # pdf, cloudinary, multipart, auth
 ├── supabase/schema.sql     # tablas + RLS + RPC
 ├── vercel.json             # build + rutas + funciones
 └── pnpm-workspace.yaml
 ```
+
+## Cargar fotos que ya están en Cloudinary
+
+Si subiste las fotos a una carpeta del **Media Library** poniéndole a cada
+archivo el **código del producto** (por ejemplo `ACC-001.jpg`), no hace falta
+volver a subirlas una por una: entrá a **Admin → Fotos de Cloudinary**.
+
+1. Escribí la carpeta (por defecto `nitro-garage/productos`) y tocá **Leer carpeta**.
+2. La pantalla cruza cada imagen con el producto cuyo `sku` coincide con el
+   nombre del archivo. La comparación ignora mayúsculas y separadores
+   (`acc 001` = `ACC-001`) y reconoce las fotos extra de un mismo producto
+   (`ACC-001-2.jpg`) y el sufijo que agrega Cloudinary si el nombre se repite.
+3. Elegís qué hacer: sumar las fotos a la galería o reemplazar la actual, y si
+   los códigos que **no** existen se dan de alta como productos nuevos (con ese
+   código como SKU y nombre, inactivos salvo que marques lo contrario).
+4. Revisás la tabla, desmarcás lo que no quieras y tocás **Aplicar**.
+
+Cada producto guarda hasta 4 fotos (`images`); la primera es la portada
+(`image_url`). No hacen falta variables de entorno nuevas: se usan las
+credenciales de Cloudinary que ya están configuradas.
 
 ## Nota sobre las imágenes del catálogo
 Los catálogos gráficos tienen **cada página como una sola imagen compuesta**
