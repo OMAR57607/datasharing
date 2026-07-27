@@ -27,9 +27,6 @@ export default function PublicLayout() {
               {count > 0 && <span className="cart-badge">{count}</span>}
             </NavLink>
             <ThemeToggle />
-            <Link to="/admin" className="btn btn-ghost btn-sm">
-              Admin
-            </Link>
           </nav>
         </div>
       </header>
@@ -59,8 +56,10 @@ export default function PublicLayout() {
                 Catálogo
               </Link>
             </p>
+            {/* rel="nofollow": el panel no se indexa (noindex en vercel.json),
+                y así tampoco se gasta presupuesto de rastreo en él. */}
             <p style={{ margin: '0.3rem 0 0' }}>
-              <Link to="/admin" className="muted">
+              <Link to="/admin" className="muted" rel="nofollow">
                 Acceso administrador
               </Link>
             </p>

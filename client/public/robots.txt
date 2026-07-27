@@ -1,5 +1,13 @@
+# Nitro Garage — reglas de rastreo.
+#
+# OJO: /admin NO se bloquea acá a propósito. Un "Disallow" impide el rastreo,
+# y si el buscador no entra nunca lee el "X-Robots-Tag: noindex" que manda
+# vercel.json, así que la URL puede terminar indexada igual (listada sin
+# descripción) con solo que alguien la enlace. Dejándola rastrear, lee el
+# noindex y la saca del índice. Además, un Disallow publica la ruta a
+# cualquiera que abra este archivo.
+
 User-agent: *
 Allow: /
-Disallow: /admin
 
 Sitemap: https://nitrogarage.mekanotek.com/sitemap.xml

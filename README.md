@@ -46,6 +46,9 @@ carga masiva de fotos desde Cloudinary y gestión de precios.
 3. En **Authentication → Providers**, dejá Email activo y **desactivá el registro
    público** ("Allow new users to sign up") para que solo el admin pueda entrar.
 4. Creá el usuario admin en **Authentication → Users → Add user** (email + contraseña).
+5. Ejecutá [`supabase/migration_admin_guard.sql`](supabase/migration_admin_guard.sql)
+   para cargar ese usuario en la lista de admins y cerrar las políticas RLS.
+   Ver la [checklist de producción](#checklist-de-producción).
 
 ### 3. Cloudinary
 - Tomá `cloud name`, `api key` y `api secret` del dashboard.
@@ -84,12 +87,82 @@ pnpm dev:client
 3. Deploy. La build corre `pnpm --filter nitro-garage-client build` y publica
    `client/dist`; las funciones de `api/` se despliegan como Serverless Functions.
 
+> **Antes de abrir el sitio al público**, seguí la
+> [checklist de producción](#checklist-de-producción): hay tres pasos que se
+> hacen en los paneles de Supabase y sin ellos el panel de administración
+> queda expuesto.
+
 > **Si tocás las dependencias, regenerá el lockfile.** Vercel instala con
 > `pnpm install --frozen-lockfile`: si `package.json` y `pnpm-lock.yaml` no
 > coinciden, el deploy corta con `ERR_PNPM_OUTDATED_LOCKFILE` y el sitio se
 > queda sirviendo la build anterior (sin avisar en la web). Después de agregar
 > o quitar un paquete, corré `pnpm install --lockfile-only` y commiteá el
 > lockfile. El CI verifica exactamente esto.
+
+## Checklist de producción
+
+Lo que hay que dejar cerrado antes de que el sitio sea público. Los tres
+primeros son configuración en los paneles: **no se pueden resolver desde el
+repo** y sin ellos el panel queda abierto.
+
+### Seguridad del panel
+
+`ProtectedRoute` **no protege nada**: el bundle de React se descarga entero en
+el navegador, así que cualquiera puede ver las rutas de `/admin` y forzar el
+render. La barrera real son las políticas **RLS de Supabase** y la validación
+del token en las Functions (`api/_lib/auth.js`).
+
+| # | Paso | Dónde | Por qué |
+| --- | --- | --- | --- |
+| 1 | Correr [`supabase/migration_admin_guard.sql`](supabase/migration_admin_guard.sql) | Supabase → SQL Editor | Las políticas originales daban permiso total a `authenticated`, o sea a **cualquier usuario logueado**. La migración crea `public.admins` y cambia las políticas a `is_admin()`: ser admin pasa a ser una fila en una tabla, no "estar logueado". |
+| 2 | Apagar *Allow new users to sign up* | Authentication → Providers → Email | Sin esto cualquiera se registra contra la API de Supabase sin pasar por el formulario. Con el paso 1 ya no alcanza para ser admin, pero igual conviene cerrarlo. |
+| 3 | Activar Turnstile | Vercel + Supabase → Authentication → Attack Protection | Anti fuerza bruta en el login. **Las dos puntas o ninguna**: la site key va en `VITE_TURNSTILE_SITE_KEY` y la secret key en Supabase. Si activás solo la de Supabase, el login queda roto en producción; si activás solo la del cliente, el token se ignora. |
+| 4 | *Leaked password protection* + MFA (TOTP) en la cuenta admin | Authentication | Cubre el caso "se filtró la contraseña". Con un solo usuario admin sale barato. |
+
+⚠️ El **paso 2 de la migración** carga tu usuario en `public.admins`. Si lo
+saltás y corrés el resto, te quedás afuera de tu propio panel. El script trae
+una consulta de verificación justo después para que lo confirmes antes de
+seguir.
+
+Para agregar o quitar admins después no hace falta tocar políticas: se inserta
+o borra la fila en `public.admins` (hay ejemplos al final de la migración).
+
+> La **anon key del cliente es pública por diseño** y no es una filtración: lo
+> que la protege es la RLS. La que nunca puede salir del servidor es la
+> `service_role` key — hoy no está en ningún lado del repo, y así tiene que
+> quedar.
+
+### Visibilidad en buscadores
+
+El sitio es **indexable** y trae metadatos por página (`client/src/lib/useSeo.js`).
+Qué hay que hacer del lado de las plataformas:
+
+1. **Google Search Console** y **Bing Webmaster Tools**: dar de alta el dominio
+   y enviar `https://nitrogarage.mekanotek.com/sitemap.xml`.
+2. Si cambia el dominio, definir `VITE_SITE_URL` en Vercel. De esa variable
+   salen el `canonical`, las `og:url` y el sitemap.
+3. Verificar con *Inspección de URLs* que Google renderiza el JS y ve el
+   contenido (la primera vez suele tardar).
+
+Cómo quedó resuelto en el repo:
+
+| Tema | Cómo está |
+| --- | --- |
+| **Metadatos por página** | `useSeo()` actualiza título, descripción, canonical, Open Graph, Twitter, `robots` y JSON-LD en cada navegación. En una SPA el `<head>` es uno solo y sobrevive al cambio de ruta: **toda página pública tiene que llamarlo**, o se queda con los metadatos de la anterior. |
+| **Sitemap con productos** | `client/scripts/generate-sitemap.mjs` corre después de `vite build` y agrega una URL por producto activo. Antes solo se declaraban 3 páginas fijas y las fichas —lo que puede posicionar por modelo y accesorio— no las veía nadie. Si faltan credenciales o Supabase no responde, escribe igual las páginas fijas y **no corta el build**. |
+| **`robots.txt`** | `/admin` **no** se bloquea a propósito. Un `Disallow` impide el rastreo, y si el buscador no entra nunca lee el `X-Robots-Tag: noindex` de `vercel.json`: la URL puede quedar indexada igual con que alguien la enlace. Dejándola rastrear, lee el `noindex` y la saca. |
+| **Panel fuera del índice** | Doble candado: `X-Robots-Tag` en `vercel.json` y `robots: 'noindex, nofollow'` desde `Login.jsx` y `AdminLayout.jsx`. El enlace del footer va con `rel="nofollow"` y se quitó el botón *Admin* del navbar público. |
+| **Previews de Vercel** | `useSeo` marca `noindex` cuando el host es `*.vercel.app` y no coincide con `VITE_SITE_URL`. Si no, cada preview compite con producción por el mismo contenido y reparte la autoridad. |
+| **`/cotizacion`** | Va con `noindex, follow` y quedó fuera del sitemap: es el carrito, para un buscador se ve siempre vacío y solo aportaría una página pobre. Los enlaces que tiene sí se siguen. |
+| **Sin JavaScript** | `index.html` trae un `<noscript>` con la descripción y los enlaces al catálogo. Googlebot ejecuta JS, pero varios rastreadores no y verían la página en blanco. |
+
+> **Limitación conocida.** Es una SPA sin renderizado en servidor: los
+> metadatos los escribe el JS. Google los ve porque renderiza, pero los
+> rastreadores de **WhatsApp, Facebook y X no ejecutan JavaScript**, así que
+> al compartir el link de un producto muestran el título y la imagen genéricos
+> de `index.html`, no los de esa ficha. La solución es prerenderizar o pasar a
+> SSR (Next.js / `vite-plugin-ssr`); es un cambio de arquitectura, no un ajuste
+> de metadatos.
 
 ## Integración continua
 
@@ -111,9 +184,12 @@ verifica que todo instale y compile, no el comportamiento.
 ```
 .
 ├── client/                 # Frontend React + Vite
+│   ├── scripts/
+│   │   └── generate-sitemap.mjs  # sitemap con una URL por producto (post-build)
 │   └── src/
 │       ├── lib/supabase.js  # cliente supabase-js
 │       ├── lib/photos.js    # descarta las fotos viejas del catálogo PDF
+│       ├── lib/useSeo.js    # metadatos por página (title, OG, canonical, robots)
 │       ├── api.js           # CRUD (Supabase) + fotos (Functions)
 │       ├── context/         # Supabase Auth
 │       ├── components/      # layout, tarjetas, esqueletos, selector de portada
@@ -123,6 +199,7 @@ verifica que todo instale y compile, no el comportamiento.
 │   ├── cloudinary-photos.js # lista una carpeta del Media Library
 │   └── _lib/                # cloudinary, multipart, auth
 ├── supabase/               # schema.sql + migraciones (SQL Editor)
+│   └── migration_admin_guard.sql  # tabla admins + RLS cerrada (¡correr antes de publicar!)
 ├── .github/workflows/ci.yml # instala y compila en cada PR
 ├── vercel.json             # build + rutas + funciones
 └── pnpm-workspace.yaml
@@ -244,13 +321,15 @@ foto viene como `{ publicId, name, url, format, bytes, width, height }`, donde
 ## Datos
 
 Todo el CRUD lo hace el cliente contra Supabase, protegido por Row Level
-Security: lectura pública solo de `active = true`, escritura solo autenticado.
+Security: lectura pública solo de `active = true`, escritura solo para los
+usuarios listados en `admins` (ver [checklist](#checklist-de-producción)).
 
 | Tabla | Para qué |
 | --- | --- |
 | `products` | Catálogo. `images` (jsonb) es la galería de hasta 4 fotos; `image_url` es la portada. `sku` es único. |
 | `price_history` | Historial de precios. `on delete cascade`: borrar un producto borra su historial. |
-| `quotes` | Cotizaciones. `items` (jsonb) guarda una copia de cada ítem, **sin** clave foránea a `products`: por eso borrar productos no afecta las cotizaciones ya emitidas. |
+| `quotes` | Cotizaciones. `items` (jsonb) guarda una copia de cada ítem, **sin** clave foránea a `products`: por eso borrar productos no afecta las cotizaciones ya emitidas. El público solo puede **insertar** (captura de lead), con límites de tamaño por `CHECK`. |
+| `admins` | Quién es admin. RLS activo y **sin políticas**: no se lee ni se escribe desde el cliente, solo desde el SQL Editor. La consulta la hace `is_admin()` con `security definer`. |
 
 RPC: `set_price` (precio + historial, atómico) e `increment_product_views`
 (cuenta solicitudes desde el público, con `security definer`).

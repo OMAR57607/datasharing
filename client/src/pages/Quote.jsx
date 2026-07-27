@@ -5,11 +5,21 @@ import { formatPrice } from '../components/ProductCard.jsx'
 import Icon from '../components/Icon.jsx'
 import { api } from '../api.js'
 import { downloadQuotePdf } from '../lib/pdf.js'
+import { useSeo } from '../lib/useSeo.js'
 import { WHATSAPP, STORE_NAME } from '../lib/config.js'
 
 const IVA_RATE = 0.16
 
 export default function Quote() {
+  // Es el carrito: para un buscador se ve siempre vacío, así que no se indexa
+  // (contenido pobre). Faltaba el hook y la página se quedaba con el título y
+  // la descripción de la anterior.
+  useSeo({
+    title: 'Mi lista de cotización',
+    description:
+      'Arma tu lista de accesorios off-road y 4x4 y solicita la cotización a Nitro Garage por WhatsApp o correo.',
+    robots: 'noindex, follow',
+  })
   const { items, remove, setQty, clear, count } = useQuote()
   const [form, setForm] = useState({ nombre: '', telefono: '', email: '', vehiculo: '', notas: '' })
   const [error, setError] = useState('')

@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import ConfigBanner from '../../components/ConfigBanner.jsx'
 import Turnstile, { TURNSTILE_ENABLED } from '../../components/Turnstile.jsx'
+import { useSeo } from '../../lib/useSeo.js'
 
 export default function Login() {
+  // Refuerza el X-Robots-Tag de vercel.json: el panel nunca se indexa.
+  useSeo({ title: 'Acceso administrador', robots: 'noindex, nofollow' })
   const { login } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')

@@ -3,8 +3,11 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import ConfigBanner from '../../components/ConfigBanner.jsx'
 import ThemeToggle from '../../components/ThemeToggle.jsx'
 import Icon from '../../components/Icon.jsx'
+import { useSeo } from '../../lib/useSeo.js'
 
 export default function AdminLayout() {
+  // Refuerza el X-Robots-Tag de vercel.json: el panel nunca se indexa.
+  useSeo({ title: 'Panel de administración', robots: 'noindex, nofollow' })
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 

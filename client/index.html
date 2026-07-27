@@ -1,10 +1,14 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-MX">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/jpeg" href="/logo.jpg" />
     <link rel="apple-touch-icon" href="/logo.jpg" />
+    <!-- Abre la conexión con Cloudinary antes de que el JS pida las fotos:
+         menos espera en LCP, que es señal de posicionamiento. -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
     <meta name="theme-color" content="#0d0d0f" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f3f4f7" media="(prefers-color-scheme: light)" />
     <!-- Aplica el tema antes de pintar para evitar el parpadeo (FOUC). -->
@@ -29,8 +33,15 @@
       content="accesorios off-road, accesorios 4x4, accesorios para pickup, roll bar, racks de batea, bumpers, tumbaburros, tapa de batea, caseta, estribos, tool box, bedliner, Toyota Hilux, Ford Ranger, Nissan Frontier, Nitro Garage"
     />
     <meta name="author" content="Nitro Garage" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <!-- max-snippet/max-video-preview sin límite: deja que Google arme el
+         fragmento completo en el resultado de búsqueda. -->
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta name="googlebot" content="index, follow" />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="geo.region" content="MX" />
     <link rel="canonical" href="https://nitrogarage.mekanotek.com/" />
 
     <!-- Open Graph / Facebook / WhatsApp -->
@@ -42,6 +53,8 @@
       content="Accesorios off-road y 4x4 para pickups: roll bars, racks, bumpers, tapas, estribos y más. Busca por marca, modelo y año."
     />
     <meta property="og:image" content="https://nitrogarage.mekanotek.com/logo.jpg" />
+    <meta property="og:image:secure_url" content="https://nitrogarage.mekanotek.com/logo.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1600" />
     <meta property="og:image:height" content="870" />
     <meta property="og:image:alt" content="Nitro Garage — accesorios off-road y 4x4" />
@@ -101,6 +114,26 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- La tienda se pinta con JavaScript. Googlebot lo ejecuta, pero varios
+         rastreadores no: sin esto verían una página en blanco. Acá tienen el
+         texto y los enlaces mínimos para entender de qué es el sitio. -->
+    <noscript>
+      <h1>Nitro Garage — Accesorios Off-Road y 4x4 para Pickups</h1>
+      <p>
+        Venta de accesorios off-road y 4x4 para pickups y camionetas: roll bars,
+        racks de batea, bumpers, tumbaburros, tapas y casetas, estribos, tool box
+        y bedliners. Envíos a todo México.
+      </p>
+      <p>
+        Para navegar el catálogo necesitas activar JavaScript. También puedes
+        escribirnos a <a href="mailto:contacto@nitrogarage.com">contacto@nitrogarage.com</a>
+        o al <a href="https://wa.me/522382900385">+52 238 290 0385</a>.
+      </p>
+      <ul>
+        <li><a href="/catalogo">Catálogo de accesorios</a></li>
+        <li><a href="/cotizacion">Solicitar una cotización</a></li>
+      </ul>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
