@@ -270,6 +270,33 @@ export const api = {
     return result
   },
 
+  // Baja masiva: desactivar (reversible) o borrar (definitivo, se lleva el
+  // historial de precios por el ON DELETE CASCADE). Las cotizaciones ya
+  // emitidas no se tocan: guardan su propia copia de los ítems.
+  async bulkSetActive(ids, active, onProgress) {
+    let done = 0
+    for (let i = 0; i < ids.length; i += 100) {
+      const chunk = ids.slice(i, i + 100)
+      const { error } = await supabase.from('products').update({ active }).in('id', chunk)
+      throwIf(error)
+      done += chunk.length
+      onProgress?.(done, ids.length)
+    }
+    return { count: ids.length }
+  },
+
+  async bulkDeleteProducts(ids, onProgress) {
+    let done = 0
+    for (let i = 0; i < ids.length; i += 100) {
+      const chunk = ids.slice(i, i + 100)
+      const { error } = await supabase.from('products').delete().in('id', chunk)
+      throwIf(error)
+      done += chunk.length
+      onProgress?.(done, ids.length)
+    }
+    return { count: ids.length }
+  },
+
   // ---------- Subida de imagen manual (Vercel Function → Cloudinary) ----------
   async uploadImage(file) {
     const form = new FormData()
