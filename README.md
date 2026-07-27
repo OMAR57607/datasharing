@@ -113,14 +113,25 @@ archivo el **código del producto** (por ejemplo `ACC-001.jpg`), no hace falta
 volver a subirlas una por una: entrá a **Admin → Fotos de Cloudinary**.
 
 1. Escribí la carpeta (por defecto `nitro-garage/productos`) y tocá **Leer carpeta**.
-2. La pantalla cruza cada imagen con el producto cuyo `sku` coincide con el
-   nombre del archivo. La comparación ignora mayúsculas y separadores
-   (`acc 001` = `ACC-001`) y reconoce las fotos extra de un mismo producto
-   (`ACC-001-2.jpg`) y el sufijo que agrega Cloudinary si el nombre se repite.
+2. La pantalla toma **el nombre del archivo como el SKU** (es la fuente de la
+   verdad) y busca ese producto. Si no encuentra el SKU idéntico, lo busca
+   ignorando mayúsculas y separadores: ahí el producto es el mismo pero está
+   mal escrito en la base, así que **le corrige el SKU** (`acc 001` → `ACC-001`).
 3. Elegís qué hacer: sumar las fotos a la galería o reemplazar la actual, y si
    los códigos que **no** existen se dan de alta como productos nuevos (con ese
    código como SKU y nombre, inactivos salvo que marques lo contrario).
 4. Revisás la tabla, desmarcás lo que no quieras y tocás **Aplicar**.
+
+Dos casos de nombres tienen su propio interruptor:
+
+- **Sufijo de Cloudinary** (`XBARRAV4_pbgioe` → SKU `XBARRAV4`): son 6 caracteres
+  en minúscula que agrega Cloudinary al subir, no forman parte del SKU. Se ignora
+  por defecto, tanto para buscar el producto como para darlo de alta. Un SKU que
+  de verdad termine así (`KIT_ABC123`) no se toca: el sufijo real siempre viene
+  en minúscula.
+- **Numeración de fotos extra** (`ACC-001-2`, `ACC-001 (1)`): viene **desactivado**,
+  porque si el nombre es el SKU entonces `ACC-001-2` es otro producto. Activalo
+  solo si numeraste a mano las fotos de un mismo código.
 
 Cada producto guarda hasta 4 fotos (`images`); la primera es la portada
 (`image_url`). No hacen falta variables de entorno nuevas: se usan las
