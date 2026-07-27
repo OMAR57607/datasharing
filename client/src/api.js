@@ -219,6 +219,58 @@ export const api = {
     return { imported: toInsert.length, skipped }
   },
 
+  // ---------- Fotos ya subidas a Cloudinary ----------
+  // Lista una carpeta del Media Library (la Function usa las credenciales
+  // del servidor). Cada foto trae su `name`, que es el código del producto.
+  async listCloudinaryPhotos(folder) {
+    const qs = folder ? `?folder=${encodeURIComponent(folder)}` : ''
+    const res = await fetch('/api/cloudinary-photos' + qs, {
+      headers: await authHeader(),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'No se pudo leer la carpeta de Cloudinary')
+    return data
+  },
+
+  // Aplica el plan armado en el panel: actualiza la foto de los productos
+  // que ya existen y crea los que faltan (SKU = nombre del archivo).
+  async applyCloudinaryPhotos({ updates = [], creates = [] }, onProgress) {
+    const result = { updated: 0, created: 0, errors: [] }
+    const total = updates.length + creates.length
+    let done = 0
+
+    for (const u of updates) {
+      try {
+        await api.updateProduct(u.id, u.payload)
+        result.updated++
+      } catch (e) {
+        result.errors.push(`${u.sku || u.id}: ${e.message}`)
+      }
+      onProgress?.(++done, total)
+    }
+
+    // Los nuevos van en lotes: un insert por cada 50 en vez de uno por fila.
+    // Si el lote falla (por ejemplo un SKU repetido) se reintenta fila por
+    // fila para no perder los que sí se podían crear.
+    for (let i = 0; i < creates.length; i += 50) {
+      const chunk = creates.slice(i, i + 50)
+      const { error } = await supabase.from('products').insert(chunk)
+      if (!error) {
+        result.created += chunk.length
+      } else {
+        for (const row of chunk) {
+          const { error: rowError } = await supabase.from('products').insert(row)
+          if (rowError) result.errors.push(`${row.sku}: ${rowError.message}`)
+          else result.created++
+        }
+      }
+      done += chunk.length
+      onProgress?.(done, total)
+    }
+
+    return result
+  },
+
   // ---------- Subida de imagen manual (Vercel Function → Cloudinary) ----------
   async uploadImage(file) {
     const form = new FormData()

@@ -19,6 +19,7 @@ import ProductEdit from './pages/admin/ProductEdit.jsx'
 import ImportPdf from './pages/admin/ImportPdf.jsx'
 import BulkPrices from './pages/admin/BulkPrices.jsx'
 import AssignPhotos from './pages/admin/AssignPhotos.jsx'
+import CloudinaryPhotos from './pages/admin/CloudinaryPhotos.jsx'
 import QuotesAdmin from './pages/admin/QuotesAdmin.jsx'
 import QuoteBuilder from './pages/admin/QuoteBuilder.jsx'
 import Quote from './pages/Quote.jsx'
@@ -54,6 +55,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="productos/:id" element={<ProductEdit />} />
             <Route path="importar" element={<ImportPdf />} />
             <Route path="fotos" element={<AssignPhotos />} />
+            <Route path="cloudinary" element={<CloudinaryPhotos />} />
             <Route path="precios" element={<BulkPrices />} />
             <Route path="cotizador" element={<QuoteBuilder />} />
             <Route path="cotizaciones" element={<QuotesAdmin />} />
