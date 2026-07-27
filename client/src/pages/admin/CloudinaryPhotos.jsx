@@ -5,7 +5,9 @@ import Icon from '../../components/Icon.jsx'
 const DEFAULT_FOLDER = 'nitro-garage/productos'
 const MAX_GALLERY = 4
 
-// Compara códigos ignorando mayúsculas y separadores: "ACC-001" = "acc 001".
+// El nombre del archivo ES el SKU: es la fuente de la verdad. `norm` solo se
+// usa para encontrar al producto cuando en la base quedó escrito distinto
+// ("acc 001" contra "ACC-001") y poder corregirlo.
 const norm = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
 
 // Nombres que Cloudinary generó solo (subidas sin nombre de archivo):
@@ -13,21 +15,32 @@ const norm = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
 const looksAuto = (s) => /^[a-z0-9]{16,}$/.test(String(s || ''))
 
 /**
- * Formas de leer el código en el nombre del archivo, de la más literal a la
- * más flexible: el nombre tal cual, sin el sufijo que agrega Cloudinary
- * cuando el nombre ya existía ("ACC-001_h3k9zq") y sin la numeración de las
- * fotos extra del mismo producto ("ACC-001-2", "ACC-001 (1)").
+ * Códigos a probar para una imagen, del más literal al más flexible:
+ *  · `exacto`   — el nombre del archivo tal cual.
+ *  · `sufijo`   — sin el sufijo aleatorio que agrega Cloudinary al subir
+ *                 ("XBARRAV4_pbgioe" → "XBARRAV4"): lo pone el sistema, no vos,
+ *                 así que no es parte del SKU. Siempre son 6 caracteres en
+ *                 minúscula, por eso la búsqueda distingue mayúsculas.
+ *  · `variante` — sin la numeración de las fotos extra ("ACC-001-2"), que
+ *                 solo aplica si esa numeración la escribiste vos.
+ *
+ * El último de la lista es el SKU autoritativo del archivo: el que se usa
+ * para dar de alta el producto si el código todavía no existe.
  */
-function candidates(name) {
+function candidates(name, { dropSuffix, dropVariant }) {
   const base = String(name || '')
     .trim()
     .replace(/\.[a-z0-9]{2,5}$/i, '')
-  const list = [base]
-  const noSuffix = base.replace(/_[a-z0-9]{6}$/i, '')
-  if (noSuffix && noSuffix !== base) list.push(noSuffix)
-  const last = list[list.length - 1]
-  const noVariant = last.replace(/(?:[\s._-]\d{1,2}|\s*\(\d{1,2}\))$/, '')
-  if (noVariant && noVariant !== last) list.push(noVariant)
+  const list = [{ code: base, kind: 'exacto' }]
+  if (dropSuffix) {
+    const noSuffix = base.replace(/_[a-z0-9]{6}$/, '')
+    if (noSuffix && noSuffix !== base) list.push({ code: noSuffix, kind: 'sufijo' })
+  }
+  if (dropVariant) {
+    const last = list[list.length - 1].code
+    const noVariant = last.replace(/(?:[\s._-]\d{1,2}|\s*\(\d{1,2}\))$/, '')
+    if (noVariant && noVariant !== last) list.push({ code: noVariant, kind: 'variante' })
+  }
   return list
 }
 
@@ -44,7 +57,9 @@ export default function CloudinaryPhotos() {
 
   // Opciones de aplicación.
   const [replace, setReplace] = useState(false)
-  const [useApprox, setUseApprox] = useState(true)
+  const [dropSuffix, setDropSuffix] = useState(true)
+  const [dropVariant, setDropVariant] = useState(false)
+  const [fixSku, setFixSku] = useState(true)
   const [createNew, setCreateNew] = useState(true)
   const [publishNew, setPublishNew] = useState(false)
   const [newCategory, setNewCategory] = useState('')
@@ -76,25 +91,51 @@ export default function CloudinaryPhotos() {
     }
   }
 
-  // Cruza cada foto con el producto cuyo SKU coincide con el nombre.
+  // Cruza cada foto con su producto. Primero busca el SKU idéntico; si no
+  // aparece, lo busca ignorando mayúsculas y separadores: ahí el producto es
+  // el mismo pero tiene el SKU mal escrito en la base.
   const rows = useMemo(() => {
     if (!photos) return []
-    const bySku = new Map()
-    for (const p of products) if (p.sku) bySku.set(norm(p.sku), p)
+    const byExact = new Map()
+    const byNorm = new Map()
+    for (const p of products) {
+      if (!p.sku) continue
+      byExact.set(p.sku.trim(), p)
+      if (!byNorm.has(norm(p.sku))) byNorm.set(norm(p.sku), p)
+    }
+
     return photos.map((ph) => {
-      const list = candidates(ph.name)
-      const exact = bySku.get(norm(list[0])) || null
-      let variant = null
-      for (let i = 1; i < list.length && !variant; i++) variant = bySku.get(norm(list[i])) || null
-      return {
-        ...ph,
-        code: list[0],
-        product: exact || (useApprox ? variant : null),
-        approx: !exact && !!variant,
-        auto: looksAuto(ph.name),
+      const list = candidates(ph.name, { dropSuffix, dropVariant })
+      const base = list[0].code
+      // El SKU del archivo es el último candidato: ya sin el sufijo que puso
+      // Cloudinary (y sin la numeración, si la tratás como foto extra).
+      const sku = list[list.length - 1].code.trim()
+      let product = null
+      let via = null
+      let skuFix = null // SKU que debería tener el producto según el archivo
+
+      for (const c of list) {
+        // Si el SKU de la base coincide letra por letra, no hay nada que corregir.
+        const exact = byExact.get(c.code.trim())
+        if (exact) {
+          product = exact
+          via = c.kind
+          break
+        }
+        // Si aparece ignorando mayúsculas y separadores, es el mismo producto
+        // con el SKU mal escrito en la base: manda el archivo.
+        const soft = byNorm.get(norm(c.code))
+        if (soft) {
+          product = soft
+          via = c.kind
+          skuFix = c.code.trim()
+          break
+        }
       }
+
+      return { ...ph, base, sku, product, via, skuFix, auto: looksAuto(ph.name) }
     })
-  }, [photos, products, useApprox])
+  }, [photos, products, dropSuffix, dropVariant])
 
   const shown = useMemo(() => {
     const s = search.trim().toLowerCase()
@@ -102,6 +143,7 @@ export default function CloudinaryPhotos() {
     return rows.filter(
       (r) =>
         r.name.toLowerCase().includes(s) ||
+        r.sku.toLowerCase().includes(s) ||
         (r.product?.name || '').toLowerCase().includes(s) ||
         (r.product?.sku || '').toLowerCase().includes(s)
     )
@@ -118,25 +160,31 @@ export default function CloudinaryPhotos() {
     for (const r of rows) {
       if (!sel[r.publicId]) continue
       if (r.product) {
-        const entry = byProduct.get(r.product.id) || { product: r.product, urls: [] }
+        const entry = byProduct.get(r.product.id) || { product: r.product, urls: [], skuFix: null }
         entry.urls.push(r.url)
+        if (!entry.skuFix && r.skuFix) entry.skuFix = r.skuFix
         byProduct.set(r.product.id, entry)
-      } else if (createNew && norm(r.code)) {
-        const key = norm(r.code)
-        const entry = byNewCode.get(key) || { code: r.code, urls: [] }
+      } else if (createNew && r.sku) {
+        // El nombre del archivo es el SKU (sin el sufijo de Cloudinary).
+        const key = r.sku
+        const entry = byNewCode.get(key) || { code: key, urls: [] }
         entry.urls.push(r.url)
         byNewCode.set(key, entry)
       }
     }
 
-    for (const { product, urls } of byProduct.values()) {
+    for (const { product, urls, skuFix } of byProduct.values()) {
       const current = Array.isArray(product.images) ? product.images.filter(Boolean) : []
       // "Completar" respeta lo que ya está cargado y suma las nuevas al final;
       // "reemplazar" deja solo las fotos de Cloudinary.
       const base = replace ? [] : current.length ? current : [product.image_url].filter(Boolean)
       const gallery = [...new Set([...base, ...urls])].slice(0, MAX_GALLERY)
-      const sameGallery = JSON.stringify(gallery) === JSON.stringify(current)
-      if (sameGallery && gallery[0] === product.image_url) {
+      const payload = { image_url: gallery[0], images: gallery }
+      if (fixSku && skuFix && skuFix !== product.sku) payload.sku = skuFix
+
+      const samePhotos =
+        JSON.stringify(gallery) === JSON.stringify(current) && gallery[0] === product.image_url
+      if (samePhotos && !payload.sku) {
         unchanged++
         continue
       }
@@ -144,7 +192,8 @@ export default function CloudinaryPhotos() {
         id: product.id,
         sku: product.sku,
         name: product.name,
-        payload: { image_url: gallery[0], images: gallery },
+        newSku: payload.sku || null,
+        payload,
       })
     }
 
@@ -161,13 +210,14 @@ export default function CloudinaryPhotos() {
     }
 
     return { updates, creates, unchanged }
-  }, [rows, sel, replace, createNew, publishNew, newCategory])
+  }, [rows, sel, replace, fixSku, createNew, publishNew, newCategory])
 
   const stats = useMemo(
     () => ({
       total: rows.length,
       matched: rows.filter((r) => r.product).length,
-      approx: rows.filter((r) => r.approx).length,
+      fixables: rows.filter((r) => r.skuFix && r.skuFix !== r.product?.sku).length,
+      conSufijo: rows.filter((r) => r.sku !== r.base).length,
       nuevos: rows.filter((r) => !r.product && !r.auto).length,
       auto: rows.filter((r) => r.auto).length,
     }),
@@ -228,9 +278,10 @@ export default function CloudinaryPhotos() {
 
       <div className="card" style={{ padding: '1.25rem', marginBottom: '1.25rem' }}>
         <p className="muted" style={{ marginTop: 0 }}>
-          Lee una carpeta del Media Library de Cloudinary y cruza cada imagen con
-          el producto cuyo <strong>SKU es igual al nombre del archivo</strong>. Las
-          que no coincidan con ningún producto se pueden dar de alta con ese código.
+          Lee una carpeta del Media Library de Cloudinary tomando el{' '}
+          <strong>nombre de cada archivo como el SKU del producto</strong>. Si el
+          código no existe en la base, se puede dar de alta con ese SKU; si existe
+          pero está escrito distinto, se corrige en la base.
         </p>
         <div className="row" style={{ alignItems: 'end', flexWrap: 'wrap' }}>
           <div className="field" style={{ flex: '1 1 280px', marginBottom: 0 }}>
@@ -269,11 +320,32 @@ export default function CloudinaryPhotos() {
               <input
                 type="checkbox"
                 style={{ width: 'auto' }}
-                checked={useApprox}
-                onChange={(e) => setUseApprox(e.target.checked)}
+                checked={fixSku}
+                onChange={(e) => setFixSku(e.target.checked)}
               />
-              Aceptar variantes del código ({stats.approx} coincidencia(s) del tipo{' '}
-              <code>ACC-001-2</code> → <code>ACC-001</code>)
+              Corregir en la base los SKU escritos distinto al archivo (
+              {stats.fixables} caso(s): <code>acc 001</code> → <code>ACC-001</code>)
+            </label>
+            <label className="row" style={{ gap: 8, textTransform: 'none', marginBottom: 6 }}>
+              <input
+                type="checkbox"
+                style={{ width: 'auto' }}
+                checked={dropSuffix}
+                onChange={(e) => setDropSuffix(e.target.checked)}
+              />
+              Ignorar el sufijo aleatorio que agrega Cloudinary al subir (
+              <code>XBARRAV4_pbgioe</code> → <code>XBARRAV4</code>) — {stats.conSufijo}{' '}
+              archivo(s) lo tienen
+            </label>
+            <label className="row" style={{ gap: 8, textTransform: 'none', marginBottom: 6 }}>
+              <input
+                type="checkbox"
+                style={{ width: 'auto' }}
+                checked={dropVariant}
+                onChange={(e) => setDropVariant(e.target.checked)}
+              />
+              Tratar <code>ACC-001-2</code> como foto extra de <code>ACC-001</code> (si
+              no, es un SKU distinto)
             </label>
             <label className="row" style={{ gap: 8, textTransform: 'none', marginBottom: 6 }}>
               <input
@@ -334,9 +406,9 @@ export default function CloudinaryPhotos() {
                     <Icon name="check" size={14} />
                   </th>
                   <th style={{ width: 52 }}></th>
-                  <th>Archivo (código)</th>
+                  <th>Archivo (SKU)</th>
                   <th>Producto</th>
-                  <th style={{ width: 180 }}>Acción</th>
+                  <th style={{ width: 190 }}>Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -357,15 +429,20 @@ export default function CloudinaryPhotos() {
                     </td>
                     <td>
                       <span className="product-sku">{r.name}</span>
-                      {r.approx && (
+                      {r.via === 'variante' && (
                         <span className="badge badge-off" style={{ marginLeft: 6 }}>
-                          variante
+                          foto extra
                         </span>
                       )}
                       {r.auto && (
                         <span className="badge badge-off" style={{ marginLeft: 6 }}>
                           sin código
                         </span>
+                      )}
+                      {r.sku !== r.base && (
+                        <div className="muted" style={{ fontSize: '0.8rem' }}>
+                          SKU: <code>{r.sku}</code>
+                        </div>
                       )}
                     </td>
                     <td>
@@ -376,6 +453,11 @@ export default function CloudinaryPhotos() {
                             <span className="badge badge-off" style={{ marginLeft: 6 }}>
                               inactivo
                             </span>
+                          )}
+                          {fixSku && r.skuFix && r.skuFix !== r.product.sku && (
+                            <div className="muted" style={{ fontSize: '0.8rem' }}>
+                              SKU: <code>{r.product.sku}</code> → <code>{r.skuFix}</code>
+                            </div>
                           )}
                         </>
                       ) : (
@@ -412,7 +494,7 @@ export default function CloudinaryPhotos() {
                 : `Aplicar (${plan.updates.length} actualizar · ${plan.creates.length} crear)`}
             </button>
             {plan.unchanged > 0 && (
-              <span className="muted">{plan.unchanged} ya tenían esa misma foto</span>
+              <span className="muted">{plan.unchanged} ya estaban al día</span>
             )}
           </div>
         </>
