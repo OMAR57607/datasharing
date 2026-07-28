@@ -1,0 +1,35 @@
+{
+  "id": "/",
+  "name": "Nitro Garage — Accesorios Off-Road y 4x4",
+  "short_name": "Nitro Garage",
+  "description": "Accesorios off-road y 4x4 para pickups y camionetas: roll bars, racks de batea, bumpers, tumbaburros, tapas y casetas, estribos, tool box y bedliners.",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d0d0f",
+  "theme_color": "#0d0d0f",
+  "categories": ["shopping", "business"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

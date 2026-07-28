@@ -30,6 +30,19 @@
       ]
     },
     {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=3600, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(favicon.ico|apple-touch-icon.png|icon-192.png|icon-512.png|icon-maskable-512.png|logo.jpg)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
       "source": "/admin",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
