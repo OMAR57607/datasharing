@@ -3,12 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Iconos. Salen del emblema recortado en cuadrado: logo.jpg es un banner
-         1600x870 y, usado como favicon, el navegador lo aplastaba a 16px.
-         logo.jpg se sigue usando para compartir (og:image), donde el formato
-         apaisado es el correcto. -->
+    <!-- Iconos, en dos niveles:
+         · Pestaña del navegador (16-48px) → monograma "N" con los colores de
+           theme.css. El emblema del logo no sobrevive a ese tamaño.
+         · Pantalla de inicio (180px en adelante) → el emblema recortado en
+           cuadrado, que ahí sí se lee y es lo que reconoce el cliente.
+         logo.jpg queda para compartir (og:image): ahí el formato apaisado es
+         el correcto. -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <!-- Abre la conexión con Cloudinary antes de que el JS pida las fotos:

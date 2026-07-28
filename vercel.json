@@ -37,7 +37,7 @@
       ]
     },
     {
-      "source": "/(favicon.ico|apple-touch-icon.png|icon-192.png|icon-512.png|icon-maskable-512.png|logo.jpg)",
+      "source": "/(favicon.ico|favicon.svg|apple-touch-icon.png|icon-192.png|icon-512.png|icon-maskable-512.png|logo.jpg)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nitro Garage">
+  <!--
+    Monograma de marca para la pestaña del navegador. El emblema completo del
+    logo no sobrevive a 16px (el texto se convierte en mancha), así que a esos
+    tamaños se usa esta "N".
+    Colores y ángulo del degradado tomados de las variables de
+    client/src/theme.css: orange #ff5a00, gold #ffb400, blue #00a3ff,
+    bg #0d0d0f, y el ángulo de 100deg de grad-brand.
+    La N va en el degradado de fuego (como dice GARAGE en el logo) porque el
+    tramo oro→azul del degradado de marca pasa por un verde sucio y a este
+    tamaño ensucia la letra. El azul entra por el aro.
+    (Ojo: un comentario XML no admite dos guiones seguidos, por eso los
+    nombres de las variables CSS van sin su prefijo.)
+  -->
+  <defs>
+    <linearGradient id="ng-fire" x1="0" y1="0.41" x2="1" y2="0.59">
+      <stop offset="0" stop-color="#ff5a00"/>
+      <stop offset="1" stop-color="#ffb400"/>
+    </linearGradient>
+    <linearGradient id="ng-brand" x1="0" y1="0.41" x2="1" y2="0.59">
+      <stop offset="0" stop-color="#ff5a00"/>
+      <stop offset="0.45" stop-color="#ffb400"/>
+      <stop offset="1" stop-color="#00a3ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="#0d0d0f"/>
+  <rect x="10" y="10" width="492" height="492" rx="102"
+        fill="none" stroke="url(#ng-brand)" stroke-width="20"/>
+
+  <!-- N pesada e inclinada 0.12 (velocidad). Barras de 62u y diagonal
+       calculada para el mismo grosor perpendicular. -->
+  <polygon fill="url(#ng-fire)"
+    points="145.12,130 207.12,130 316.88,282 335.12,130 397.12,130
+            366.88,382 304.88,382 195.12,230 176.88,382 114.88,382"/>
+</svg>
